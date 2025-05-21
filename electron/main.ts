@@ -1,6 +1,7 @@
 // electron/main.ts
-import { app, BrowserWindow } from 'electron';
 import path from 'path';
+
+import { app, BrowserWindow } from 'electron';
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -13,7 +14,7 @@ function createWindow() {
 
   const isDev = !app.isPackaged;
   if (isDev) {
-    win.loadURL('http://localhost:5173');        
+    win.loadURL('http://localhost:5173');
   } else {
     win.loadFile(path.join(__dirname, '../dist/index.html'));
   }
