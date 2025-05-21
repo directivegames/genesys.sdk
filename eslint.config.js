@@ -1,8 +1,8 @@
-import tsParser from '@typescript-eslint/parser';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
-import importPlugin from 'eslint-plugin-import';
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const importPlugin = require('eslint-plugin-import');
 
-export default [
+module.exports = [
   {
     ignores: ['dist/**', 'vite.config.ts']
   },
