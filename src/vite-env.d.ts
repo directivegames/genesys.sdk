@@ -1,41 +1,52 @@
 /// <reference types="vite/client" />
 
-interface ServerStatus {
+export interface ServerStatus {
   running: boolean;
   port?: number;
 }
 
-interface ServerStartResult extends ServerStatus {
+export interface ServerStartResult extends ServerStatus {
   success: boolean;
   error?: string;
 }
 
-interface ServerStopResult {
+export interface ServerStopResult {
   success: boolean;
   running: boolean;
   error?: string;
 }
 
-interface ServerStartedEvent {
+export interface ServerStartedEvent {
   port: number;
 }
 
-enum LogLevel {
+export enum LogLevel {
   INFO = 'info',
   WARN = 'warn',
   ERROR = 'error',
   DEBUG = 'debug'
 }
 
-interface LogEntry {
+export interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
 }
 
-type ServerCallback<T = any> = (data: T) => void;
+export interface ProjectTemplate {
+  id: string;
+  name: string;
+}
 
-interface ElectronAPI {
+export interface ProjectCreateResult {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+export type ServerCallback<T = any> = (data: T) => void;
+
+export interface ElectronAPI {
   // Folder selection
   selectFolder: () => Promise<string | null>;
 
@@ -47,6 +58,10 @@ interface ElectronAPI {
   // Server logs
   getServerLogs: () => Promise<LogEntry[]>;
 
+  // Project management
+  newProject: (path: string, template: string) => Promise<ProjectCreateResult>;
+  getProjectTemplates: () => Promise<ProjectTemplate[]>;
+
   // Event listeners
   onServerStarted: (callback: ServerCallback<ServerStartedEvent>) => void;
   onServerStopped: (callback: ServerCallback<void>) => void;
@@ -54,6 +69,6 @@ interface ElectronAPI {
   onServerLog: (callback: ServerCallback<LogEntry>) => void;
 }
 
-interface Window {
+export interface Window {
   electronAPI: ElectronAPI;
 }

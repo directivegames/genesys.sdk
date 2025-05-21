@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Server logs
   getServerLogs: () => ipcRenderer.invoke('server:getLogs'),
 
+  // Project management
+  newProject: (path: string, template: string) => ipcRenderer.invoke('newProject', path, template),
+  getProjectTemplates: () => ipcRenderer.invoke('getProjectTemplates'),
+
   // Event listeners
   onServerStarted: (callback: ServerCallback<any>) => ipcRenderer.on('server:started', (_, data) => callback(data)),
   onServerStopped: (callback: ServerCallback<void>) => ipcRenderer.on('server:stopped', () => callback()),

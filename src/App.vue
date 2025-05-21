@@ -2,6 +2,7 @@
 import HelloWorld from './components/HelloWorld.vue'
 import FolderSelector from './components/FolderSelector.vue'
 import ServerControl from './components/ServerControl.vue'
+import ProjectCreator from './components/ProjectCreator.vue'
 import { ref } from 'vue'
 
 const selectedFolder = ref<string | null>(null)
@@ -26,6 +27,8 @@ const handleFolderSelected = (path: string) => {
   </div>
   
   <ServerControl />
+  
+  <ProjectCreator />
 </template>
 
 <style scoped>

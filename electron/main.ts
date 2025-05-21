@@ -1,11 +1,19 @@
 // electron/main.ts
+import fs from 'fs';
 import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 
 import { serverManager } from './server.js';
+import { newProject, TEMPLATES } from './tasks/newProject.js';
 
 import type { LogEntry } from './server.js';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -82,6 +90,16 @@ ipcMain.handle('server:getLogs', async () => {
   return serverManager.getLogs();
 });
 
+// New project
+ipcMain.handle('newProject', async (event, path: string, template: string) => {
+  return newProject(path, template);
+});
+
+// Get project templates
+ipcMain.handle('getProjectTemplates', async () => {
+  return TEMPLATES;
+});
+
 // Listen to server events and notify renderer
 serverManager.on('started', (info) => {
   BrowserWindow.getAllWindows().forEach(window => {
@@ -119,3 +137,12 @@ app.on('window-all-closed', () => {
 
   if (process.platform !== 'darwin') app.quit();
 });
+
+const logFile = path.join(app.getPath('userData'), 'main-error.log');
+
+function logError(error: unknown) {
+  console.error('Uncaught exception:', error);
+}
+
+process.on('uncaughtException', logError);
+process.on('unhandledRejection', logError);

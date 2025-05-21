@@ -4,7 +4,7 @@ const importPlugin = require('eslint-plugin-import');
 
 module.exports = [
   {
-    ignores: ['dist/**', 'vite.config.ts']
+    ignores: ['dist/**', 'vite.config.ts', 'vite.preload.config.ts']
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
