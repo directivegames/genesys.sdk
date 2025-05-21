@@ -1,15 +1,12 @@
 // electron/main.ts
-import fs from 'fs';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 
-import { serverManager } from './server.js';
-import { newProject, TEMPLATES } from './tasks/newProject.js';
-
-import type { LogEntry } from './server.js';
+import { fileServer } from './file-server.js';
+import { newProject, TEMPLATES } from './tasks/new-project.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,14 +47,13 @@ ipcMain.handle('dialog:openDirectory', async () => {
 });
 
 // Server management IPC handlers
-ipcMain.handle('server:start', async (event, port = 3000) => {
+ipcMain.handle('file-server:start', async (event, port = 4000, rootDir: string) => {
   try {
-    serverManager.setPort(port);
-    const success = serverManager.start();
+    await fileServer.start(port, rootDir);
     return {
-      success,
-      running: serverManager.isServerRunning(),
-      port: serverManager.getPort()
+      success: true,
+      running: fileServer.isServerRunning(),
+      port: fileServer.getPort()
     };
   } catch (error: any) {
     console.error('Failed to start server:', error);
@@ -65,12 +61,12 @@ ipcMain.handle('server:start', async (event, port = 3000) => {
   }
 });
 
-ipcMain.handle('server:stop', async () => {
+ipcMain.handle('file-server:stop', async () => {
   try {
-    const success = serverManager.stop();
+    await fileServer.stop();
     return {
-      success,
-      running: serverManager.isServerRunning()
+      success: true,
+      running: fileServer.isServerRunning()
     };
   } catch (error: any) {
     console.error('Failed to stop server:', error);
@@ -78,16 +74,11 @@ ipcMain.handle('server:stop', async () => {
   }
 });
 
-ipcMain.handle('server:status', async () => {
+ipcMain.handle('file-server:status', async () => {
   return {
-    running: serverManager.isServerRunning(),
-    port: serverManager.getPort()
+    running: fileServer.isServerRunning(),
+    port: fileServer.getPort()
   };
-});
-
-// Get server logs
-ipcMain.handle('server:getLogs', async () => {
-  return serverManager.getLogs();
 });
 
 // New project
@@ -101,48 +92,25 @@ ipcMain.handle('getProjectTemplates', async () => {
 });
 
 // Listen to server events and notify renderer
-serverManager.on('started', (info) => {
+fileServer.on('log', (...info) => {
   BrowserWindow.getAllWindows().forEach(window => {
-    window.webContents.send('server:started', info);
+    window.webContents.send('file-server:log', ...info);
   });
 });
 
-serverManager.on('stopped', () => {
+fileServer.on('error', (...info) => {
   BrowserWindow.getAllWindows().forEach(window => {
-    window.webContents.send('server:stopped');
-  });
-});
-
-serverManager.on('error', (error) => {
-  console.error('Server error:', error);
-  BrowserWindow.getAllWindows().forEach(window => {
-    window.webContents.send('server:error', error.message);
-  });
-});
-
-// Forward server logs to renderer
-serverManager.on('log', (logEntry: LogEntry) => {
-  BrowserWindow.getAllWindows().forEach(window => {
-    window.webContents.send('server:log', logEntry);
+    window.webContents.send('file-server:error', ...info);
   });
 });
 
 app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   // Stop server when closing app
-  if (serverManager.isServerRunning()) {
-    serverManager.stop();
+  if (fileServer.isServerRunning()) {
+    await fileServer.stop();
   }
 
   if (process.platform !== 'darwin') app.quit();
 });
-
-const logFile = path.join(app.getPath('userData'), 'main-error.log');
-
-function logError(error: unknown) {
-  console.error('Uncaught exception:', error);
-}
-
-process.on('uncaughtException', logError);
-process.on('unhandledRejection', logError);

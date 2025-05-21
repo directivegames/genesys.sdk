@@ -14,7 +14,7 @@ const emit = defineEmits<{
 const selectFolder = async () => {
   try {
     console.log('Attempting to select folder...');
-    
+
     // Check if electron API is available
     if (!window.electronAPI) {
       console.error('Electron API not available!');

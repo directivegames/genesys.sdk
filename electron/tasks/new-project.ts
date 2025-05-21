@@ -9,7 +9,7 @@ import * as ENGINE from 'genesys.js';
 import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME } from './const.js';
 import * as T from './templates/index.js';
 
-import type { ProjectCreateResult } from '../../src/vite-env';
+import type { ProjectCreateResult } from '../../src/types/vite-env.js';
 
 T.loadTemplates();
 

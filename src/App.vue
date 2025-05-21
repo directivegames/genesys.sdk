@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
 import FolderSelector from './components/FolderSelector.vue'
 import ServerControl from './components/ServerControl.vue'
 import ProjectCreator from './components/ProjectCreator.vue'

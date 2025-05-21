@@ -1,80 +1,49 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import LogConsole from './LogConsole.vue';
 
-const serverRunning = ref(false);
-const serverPort = ref(3000);
-const serverStatus = ref('Stopped');
-const statusClass = ref('status-stopped');
-const isLoading = ref(false);
+const isRunning = ref(false);
+const serverPort = ref(4000);
 const errorMessage = ref('');
+const isLoading = ref(false);
+
+let removeLogListener: (() => void) | undefined;
+let removeErrorListener: (() => void) | undefined;
 
 // Initialize server status
 onMounted(async () => {
-  await checkServerStatus();
   setupEventListeners();
 });
 
 // Clean up event listeners
 onUnmounted(() => {
-  removeEventListeners();
+  removeLogListener?.();
+  removeErrorListener?.();
 });
 
 // Set up event listeners for server events
 const setupEventListeners = () => {
-  window.electronAPI.onServerStarted((data) => {
-    console.log('Server started event received', data);
-    serverRunning.value = true;
-    serverPort.value = data.port;
-    serverStatus.value = `Running on port ${data.port}`;
-    statusClass.value = 'status-running';
-    isLoading.value = false;
-    errorMessage.value = '';
+  removeLogListener = window.electronAPI.onFileServerLog((...log) => {
+    console.log(...log);
   });
 
-  window.electronAPI.onServerStopped(() => {
-    console.log('Server stopped event received');
-    serverRunning.value = false;
-    serverStatus.value = 'Stopped';
-    statusClass.value = 'status-stopped';
-    isLoading.value = false;
-    errorMessage.value = '';
+  removeErrorListener = window.electronAPI.onFileServerError((...error) => {
+    console.error(...error);
+    errorMessage.value = error.join('\n');
   });
-
-  window.electronAPI.onServerError((error) => {
-    console.error('Server error event received', error);
-    errorMessage.value = error;
-    isLoading.value = false;
-  });
-};
-
-// Remove event listeners
-const removeEventListeners = () => {
-  // In a real app we would need to remove the listeners here
-  // but Electron's contextBridge doesn't support removing listeners directly
 };
 
 // Start the server
 const startServer = async () => {
   try {
     isLoading.value = true;
-    errorMessage.value = '';
-    serverStatus.value = 'Starting...';
-    
-    const result = await window.electronAPI.startServer(serverPort.value);
-    
-    console.log('Start server result:', result);
-    
-    if (!result.success) {
-      errorMessage.value = result.error || 'Failed to start server';
-      serverStatus.value = 'Error';
-      statusClass.value = 'status-error';
-    }
-  } catch (error) {
+    errorMessage.value = '';  
+    await window.electronAPI.startFileServer(serverPort.value, ".");
+    isRunning.value = true;
+  } catch (error: any) {  
     console.error('Error starting server:', error);
     errorMessage.value = error.message || 'Failed to start server';
-    serverStatus.value = 'Error';
-    statusClass.value = 'status-error';
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -82,45 +51,14 @@ const startServer = async () => {
 const stopServer = async () => {
   try {
     isLoading.value = true;
-    errorMessage.value = '';
-    serverStatus.value = 'Stopping...';
-    
-    const result = await window.electronAPI.stopServer();
-    
-    console.log('Stop server result:', result);
-    
-    if (!result.success) {
-      errorMessage.value = result.error || 'Failed to stop server';
-      serverStatus.value = 'Error';
-      statusClass.value = 'status-error';
-    }
-  } catch (error) {
+    errorMessage.value = '';    
+    await window.electronAPI.stopFileServer();    
+    isRunning.value = false;    
+  } catch (error: any) {
     console.error('Error stopping server:', error);
-    errorMessage.value = error.message || 'Failed to stop server';
-    serverStatus.value = 'Error';
-    statusClass.value = 'status-error';
-  }
-};
-
-// Check server status
-const checkServerStatus = async () => {
-  try {
-    const status = await window.electronAPI.getServerStatus();
-    serverRunning.value = status.running;
-    
-    if (status.running) {
-      serverPort.value = status.port || 3000;
-      serverStatus.value = `Running on port ${serverPort.value}`;
-      statusClass.value = 'status-running';
-    } else {
-      serverStatus.value = 'Stopped';
-      statusClass.value = 'status-stopped';
-    }
-  } catch (error) {
-    console.error('Error checking server status:', error);
-    errorMessage.value = error.message || 'Failed to check server status';
-    serverStatus.value = 'Error';
-    statusClass.value = 'status-error';
+    errorMessage.value = error.message || 'Failed to stop server';    
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -142,11 +80,6 @@ const handlePortChange = (event: Event) => {
   <div class="server-control">
     <h2>Express Server Control</h2>
     
-    <div class="server-status">
-      <span>Status: </span>
-      <span :class="statusClass">{{ serverStatus }}</span>
-    </div>
-    
     <div class="control-panel">
       <div class="port-config">
         <label for="server-port">Port:</label>
@@ -156,14 +89,14 @@ const handlePortChange = (event: Event) => {
           min="1024" 
           max="65535" 
           v-model="serverPort" 
-          :disabled="serverRunning || isLoading" 
+          :disabled="isRunning || isLoading" 
           @input="handlePortChange"
         />
       </div>
       
       <div class="server-actions">
         <button 
-          v-if="!serverRunning" 
+          v-if="!isRunning" 
           @click="startServer" 
           :disabled="isLoading"
           class="start-btn"
@@ -186,7 +119,7 @@ const handlePortChange = (event: Event) => {
       {{ errorMessage }}
     </div>
     
-    <div v-if="serverRunning" class="server-info">
+    <div v-if="isRunning" class="server-info">
       <p>Server is running at <a :href="`http://localhost:${serverPort}`" target="_blank">http://localhost:{{ serverPort }}</a></p>
       <p>Test endpoints:</p>
       <ul>
@@ -197,13 +130,7 @@ const handlePortChange = (event: Event) => {
           <a :href="`http://localhost:${serverPort}/api/hello`" target="_blank">/api/hello</a>
         </li>
       </ul>
-    </div>
-    
-    <!-- Server Logs Console -->
-    <LogConsole 
-      maxHeight="400px" 
-      title="Server Console Output"
-    />
+    </div>    
   </div>
 </template>
 

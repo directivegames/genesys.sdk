@@ -20,19 +20,6 @@ export interface ServerStartedEvent {
   port: number;
 }
 
-export enum LogLevel {
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  DEBUG = 'debug'
-}
-
-export interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-}
-
 export interface ProjectTemplate {
   id: string;
   name: string;
@@ -51,24 +38,15 @@ export interface ElectronAPI {
   selectFolder: () => Promise<string | null>;
 
   // Server management
-  startServer: (port?: number) => Promise<ServerStartResult>;
-  stopServer: () => Promise<ServerStopResult>;
-  getServerStatus: () => Promise<ServerStatus>;
-
-  // Server logs
-  getServerLogs: () => Promise<LogEntry[]>;
+  startFileServer: (port: number, rootDir: string) => Promise<ServerStartResult>;
+  stopFileServer: () => Promise<ServerStopResult>;
+  getFileServerStatus: () => Promise<ServerStatus>;
 
   // Project management
   newProject: (path: string, template: string) => Promise<ProjectCreateResult>;
   getProjectTemplates: () => Promise<ProjectTemplate[]>;
 
   // Event listeners
-  onServerStarted: (callback: ServerCallback<ServerStartedEvent>) => void;
-  onServerStopped: (callback: ServerCallback<void>) => void;
-  onServerError: (callback: ServerCallback<string>) => void;
-  onServerLog: (callback: ServerCallback<LogEntry>) => void;
-}
-
-export interface Window {
-  electronAPI: ElectronAPI;
+  onFileServerLog: (callback: ServerCallback) => () => void;
+  onFileServerError: (callback: ServerCallback) => () => void;
 }

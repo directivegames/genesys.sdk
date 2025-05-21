@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import type { ProjectTemplate } from '../types/vite-env';
 
 const projectPath = ref<string>('');
 const selectedTemplate = ref<string>('');
