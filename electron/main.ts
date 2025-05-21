@@ -3,6 +3,10 @@ import path from 'path';
 
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 
+import { serverManager } from './server.js';
+
+import type { LogEntry } from './server.js';
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
@@ -37,8 +41,81 @@ ipcMain.handle('dialog:openDirectory', async () => {
   }
 });
 
+// Server management IPC handlers
+ipcMain.handle('server:start', async (event, port = 3000) => {
+  try {
+    serverManager.setPort(port);
+    const success = serverManager.start();
+    return {
+      success,
+      running: serverManager.isServerRunning(),
+      port: serverManager.getPort()
+    };
+  } catch (error: any) {
+    console.error('Failed to start server:', error);
+    return { success: false, error: error.message ?? 'Unknown error' };
+  }
+});
+
+ipcMain.handle('server:stop', async () => {
+  try {
+    const success = serverManager.stop();
+    return {
+      success,
+      running: serverManager.isServerRunning()
+    };
+  } catch (error: any) {
+    console.error('Failed to stop server:', error);
+    return { success: false, error: error.message ?? 'Unknown error' };
+  }
+});
+
+ipcMain.handle('server:status', async () => {
+  return {
+    running: serverManager.isServerRunning(),
+    port: serverManager.getPort()
+  };
+});
+
+// Get server logs
+ipcMain.handle('server:getLogs', async () => {
+  return serverManager.getLogs();
+});
+
+// Listen to server events and notify renderer
+serverManager.on('started', (info) => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('server:started', info);
+  });
+});
+
+serverManager.on('stopped', () => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('server:stopped');
+  });
+});
+
+serverManager.on('error', (error) => {
+  console.error('Server error:', error);
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('server:error', error.message);
+  });
+});
+
+// Forward server logs to renderer
+serverManager.on('log', (logEntry: LogEntry) => {
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('server:log', logEntry);
+  });
+});
+
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
+  // Stop server when closing app
+  if (serverManager.isServerRunning()) {
+    serverManager.stop();
+  }
+
   if (process.platform !== 'darwin') app.quit();
 });

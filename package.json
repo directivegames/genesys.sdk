@@ -44,6 +44,7 @@
     "cacheable-lookup": "^5.0.4",
     "cacheable-request": "^7.0.4",
     "clone-response": "^1.0.3",
+    "cors": "^2.8.5",
     "debug": "^4.4.1",
     "decompress-response": "^6.0.0",
     "defer-to-connect": "^2.0.1",
@@ -56,6 +57,7 @@
     "es-errors": "^1.3.0",
     "es6-error": "^4.1.1",
     "escape-string-regexp": "^4.0.0",
+    "express": "^5.1.0",
     "extract-zip": "^2.0.1",
     "fd-slicer": "^1.1.0",
     "fs-extra": "^8.1.0",
@@ -100,19 +102,21 @@
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
     "@types/node": "^22.15.21",
+    "@typescript-eslint/eslint-plugin": "^8.29.1",
+    "@typescript-eslint/parser": "^8.29.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "concurrently": "^9.1.2",
     "electron": "^36.2.1",
     "electron-builder": "^26.0.12",
+    "eslint": "^9.24.0",
+    "eslint-plugin-import": "^2.31.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vue-tsc": "^2.2.8",
-    "wait-on": "^8.0.3",
-    "@typescript-eslint/eslint-plugin": "^8.29.1",
-    "@typescript-eslint/parser": "^8.29.1",
-    "eslint": "^9.24.0",
-    "eslint-plugin-import": "^2.31.0"
+    "wait-on": "^8.0.3"
   }
 }
