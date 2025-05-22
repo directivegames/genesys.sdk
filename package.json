@@ -12,7 +12,8 @@
     "dev": "npm run compile && concurrently -k -n MAIN,PRELOAD,VITE \"npm run dev:main\" \"npm run dev:preload\" \"npm run dev:vite\" \"npm run dev:electron\"",
     "compile": "tsc -p tsconfig.json && tsc -p tsconfig.preload.json",
     "build": "vite build && npm run compile",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "lint": "eslint . --fix --ext .ts,.tsx"
   },
   "build": {
     "appId": "com.directivegames.genesys.sdk",
@@ -48,6 +49,10 @@
     "tsc-watch": "^6.3.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "wait-on": "^8.0.3"
+    "wait-on": "^8.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.29.1",
+    "@typescript-eslint/parser": "^8.29.1",
+    "eslint": "^9.24.0",
+    "eslint-plugin-import": "^2.31.0"
   }
 }

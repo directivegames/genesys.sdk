@@ -11,6 +11,5 @@ declare global {
         };
     }
 }
-  
+
 window.electronAPI.ping().then(console.log); // prints: "pong from main process"
-  

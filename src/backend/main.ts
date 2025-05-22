@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+import { app, BrowserWindow, ipcMain } from 'electron';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +21,7 @@ const createWindow = async () => {
     await win.loadURL('http://localhost:5173');
     win.webContents.openDevTools();
   } else {
-    await win.loadFile(path.join(__dirname, '../index.html'));    
+    await win.loadFile(path.join(__dirname, '../index.html'));
   }
 };
 
