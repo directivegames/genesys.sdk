@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-import chalk from 'chalk';
 import { JSDOM } from 'jsdom';
 
 
@@ -15,15 +13,6 @@ export function mockBrowserEnvironment() {
     navigator.getGamepads = () => [];
   }
 }
-
-/*
-export function mockEsModule() {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  (global as any).__filename = __filename;
-  (global as any).__dirname = __dirname;
-}
-*/
 
 export function getProjectRoot() {
   let currentDir = __dirname;
@@ -44,25 +33,4 @@ export function checkEngineVersion(engineVersion?: string) {
   if (engineVersion && engineVersion !== pkg.version) {
     throw new Error(`Engine version ${pkg.version} does not match ${engineVersion}`);
   }
-}
-
-export function setupLogging() {
-  const originalLog = console.log;
-  const originalWarn = console.warn;
-  const originalError = console.error;
-
-  console.log = (...args) => {
-    const msg = args.map(arg => String(arg)).join(' ');
-    originalLog(chalk.green(msg));
-  };
-
-  console.warn = (...args) => {
-    const msg = args.map(arg => String(arg)).join(' ');
-    originalWarn(chalk.yellow(msg));
-  };
-
-  console.error = (...args) => {
-    const msg = args.map(arg => String(arg)).join(' ');
-    originalError(chalk.red(msg));
-  };
 }

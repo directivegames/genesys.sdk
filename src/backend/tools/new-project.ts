@@ -4,23 +4,21 @@ import path from 'path';
 
 import * as ENGINE from 'genesys.js';
 
-
-
 import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME } from './const.js';
-import * as T from './templates/index.js';
+import * as T from './project-templates/index.js';
 
-import type { ProjectCreateResult } from '../../src/types/vite-env.js';
+import type { CreateProjectResult, ProjectTemplate } from '../../api.js';
 
 T.loadTemplates();
 
 // Available project templates
-export const TEMPLATES = [
+export const TEMPLATES: ProjectTemplate[] = [
   { id: 'FreeCameraGameTemplate', name: 'Free Camera' },
   { id: 'FirstPersonGameTemplate', name: 'First Person' },
   { id: 'ThirdPersonGameTemplate', name: 'Third Person' },
 ];
 
-export async function newProject(projectPath: string, templateId: string): Promise<ProjectCreateResult> {
+export async function newProject(projectPath: string, templateId: string): Promise<CreateProjectResult> {
   try {
     const templateName = 'GAME.' + templateId;
     const templateClass = ENGINE.ClassRegistry.getClass(templateName);

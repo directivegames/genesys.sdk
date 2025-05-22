@@ -1,17 +1,17 @@
-const tsParser = require('@typescript-eslint/parser');
-const tsPlugin = require('@typescript-eslint/eslint-plugin');
-const importPlugin = require('eslint-plugin-import');
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import importPlugin from 'eslint-plugin-import';
 
-module.exports = [
+export default [
   {
-    ignores: ['dist/**', 'vite.config.ts', 'vite.preload.config.ts']
+    ignores: ['dist/**', 'vite.config.ts']
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: ['./tsconfig.app.json', './tsconfig.node.json', './tsconfig.electron.json']
+        project: ['./tsconfig.json', './tsconfig.preload.json']
       }
     },
     plugins: {

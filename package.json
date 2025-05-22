@@ -2,143 +2,78 @@
   "name": "genesys.sdk",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/directivegames/genesys.sdk#readme",
-  "bugs": {
-    "url": "https://github.com/directivegames/genesys.sdk/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/directivegames/genesys.sdk.git"
-  },
-  "license": "ISC",
-  "author": "",
+  "main": "index.js",
   "type": "module",
-  "main": "dist-electron/main.js",
   "scripts": {
-    "type-check": "vue-tsc --noEmit -p tsconfig.app.json",
-    "dev": "concurrently -k -n \"VITE,PRELOAD,ELECTRON\" -c \"cyan,magenta,yellow\" \"vite\" \"npm run build:preload:watch\" \"wait-on dist-electron/preload.js http://localhost:5173 && electron .\"",
-    "build": "npm run type-check && npm run build:preload && vite build && tsc -p tsconfig.electron.json",
-    "build:preload": "vite build --config vite.preload.config.ts",
-    "build:preload:watch": "vite build --watch --config vite.preload.config.ts",
-    "build:electron": "npm run build:preload && tsc -p tsconfig.electron.json",
+    "dev:main": "tsc --watch -p tsconfig.json",
+    "dev:preload": "tsc --watch -p tsconfig.preload.json",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron dist/backend/main.js",
+    "dev": "npm run compile && concurrently -k -n MAIN,PRELOAD,VITE \"npm run dev:main\" \"npm run dev:preload\" \"npm run dev:vite\" \"npm run dev:electron\"",
+    "compile": "tsc -p tsconfig.json && tsc -p tsconfig.preload.json",
+    "build": "vite build && npm run compile",
     "dist": "npm run build && electron-builder",
     "lint": "eslint . --fix --ext .ts,.tsx"
   },
   "build": {
     "appId": "com.directivegames.genesys.sdk",
-    "productName": "Genesys SDK",
+    "productName": "Genesys",
     "files": [
       "dist/**/*",
-      "dist-electron/**/*",
       {
         "from": "node_modules/three/examples/jsm",
         "to": "node_modules/three/examples/jsm",
         "filter": [
           "**/*"
         ]
-      },
-      {
-        "from": "dist-electron/preload.js",
-        "to": "preload.js"
       }
     ],
-    "mac": {
-      "target": "dmg"
+    "directories": {
+      "buildResources": "build"
+    },
+    "extraMetadata": {
+      "main": "dist/backend/main.js"
     },
     "win": {
       "target": "nsis"
     },
-    "linux": {
-      "target": "AppImage"
+    "mac": {
+      "target": "dmg"
     }
   },
   "dependencies": {
-    "boolean": "^3.2.0",
-    "buffer-crc32": "^0.2.13",
-    "cacheable-lookup": "^5.0.4",
-    "cacheable-request": "^7.0.4",
-    "chalk": "^5.4.1",
-    "clone-response": "^1.0.3",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/lab": "^7.0.0-beta.12",
+    "@mui/material": "^7.1.0",
     "core-util-is": "^1.0.3",
     "cors": "^2.8.5",
-    "debug": "^4.4.1",
-    "decompress-response": "^6.0.0",
-    "defer-to-connect": "^2.0.1",
-    "define-data-property": "^1.1.4",
-    "define-properties": "^1.2.1",
-    "detect-node": "^2.1.0",
-    "end-of-stream": "^1.4.4",
-    "env-paths": "^2.2.1",
-    "es-define-property": "^1.0.1",
-    "es-errors": "^1.3.0",
-    "es6-error": "^4.1.1",
-    "escape-string-regexp": "^4.0.0",
     "express": "^5.1.0",
-    "extract-zip": "^2.0.1",
-    "fd-slicer": "^1.1.0",
-    "fs-extra": "^8.1.0",
-    "genesys.js": "^0.0.101",
-    "get-stream": "^5.2.0",
-    "global-agent": "^3.0.0",
-    "globalthis": "^1.0.4",
-    "gopd": "^1.2.0",
-    "got": "^11.8.6",
-    "graceful-fs": "^4.2.11",
-    "has-property-descriptors": "^1.0.2",
-    "http-cache-semantics": "^4.2.0",
-    "http2-wrapper": "^1.0.3",
+    "genesys.js": "^0.0.102",
     "jsdom": "^26.1.0",
-    "json-buffer": "^3.0.1",
-    "json-stringify-safe": "^5.0.1",
-    "jsonfile": "^4.0.0",
-    "keyv": "^4.5.4",
-    "lowercase-keys": "^2.0.0",
-    "matcher": "^3.0.0",
-    "mimic-response": "^1.0.1",
-    "ms": "^2.1.3",
     "multer": "^2.0.0",
-    "normalize-url": "^6.1.0",
-    "object-keys": "^1.1.1",
-    "once": "^1.4.0",
-    "p-cancelable": "^2.1.1",
-    "pend": "^1.2.0",
-    "progress": "^2.0.3",
-    "pump": "^3.0.2",
-    "quick-lru": "^5.1.1",
-    "resolve-alpn": "^1.2.1",
-    "responselike": "^2.0.1",
-    "roarr": "^2.15.4",
-    "semver": "^6.3.1",
-    "semver-compare": "^1.0.0",
-    "serialize-error": "^7.0.1",
-    "sprintf-js": "^1.1.3",
-    "sumchecker": "^3.0.1",
-    "three.js": "^0.77.1",
-    "type-fest": "^0.13.1",
-    "undici-types": "^6.21.0",
-    "universalify": "^0.1.2",
-    "vue": "^3.5.14",
-    "wrappy": "^1.0.2",
-    "yauzl": "^2.10.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/jsdom": "^21.1.7",
     "@types/multer": "^1.4.12",
-    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
     "@typescript-eslint/eslint-plugin": "^8.29.1",
     "@typescript-eslint/parser": "^8.29.1",
-    "@vitejs/plugin-vue": "^5.2.3",
-    "@vue/tsconfig": "^0.7.0",
+    "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "electron": "^36.2.1",
     "electron-builder": "^26.0.12",
     "eslint": "^9.24.0",
     "eslint-plugin-import": "^2.31.0",
+    "tsc-watch": "^6.3.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vue-tsc": "^2.2.8",
     "wait-on": "^8.0.3"
   }
 }
