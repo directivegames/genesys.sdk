@@ -11,7 +11,7 @@ const electronAPI: ElectronAPI = {
   },
 
   os: {
-    openDirectory: () => ipcRenderer.invoke('os.openDirectory'),
+    chooseDirectory: () => ipcRenderer.invoke('os.chooseDirectory'),
   },
 
   tools: {

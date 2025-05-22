@@ -186,9 +186,9 @@ export const ProjectManagement = () => {
     }
   }, []);
 
-  const handleOpenDirectory = async () => {
+  const handleChooseDirectory = async () => {
     try {
-      const directory = await window.electronAPI.os.openDirectory();
+      const directory = await window.electronAPI.os.chooseDirectory();
       if (directory) {
         // Save to localStorage
         localStorage.setItem(STORAGE_KEY_DIRECTORY, directory);
@@ -356,7 +356,7 @@ export const ProjectManagement = () => {
             <div className="control-group">
               <LoadingButton
                 variant="contained"
-                onClick={handleOpenDirectory}
+                onClick={handleChooseDirectory}
               >
                 Open Directory
               </LoadingButton>

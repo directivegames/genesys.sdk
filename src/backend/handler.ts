@@ -25,7 +25,7 @@ ipcMain.handle('fileServer.status', async (): Promise<FileServerStatus> => {
   };
 });
 
-ipcMain.handle('os.openDirectory', async (): Promise<string | null> => {
+ipcMain.handle('os.chooseDirectory', async (): Promise<string | null> => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ['openDirectory'],
   });
