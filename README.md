@@ -1,3 +1,6 @@
+[![CI](https://github.com/directivegames/genesys.sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/directivegames/genesys.sdk/actions/workflows/ci.yml)
+[![Publish](https://github.com/directivegames/genesys.sdk/actions/workflows/publish.yml/badge.svg)](https://github.com/directivegames/genesys.sdk/actions/workflows/publish.yml)
+
 # How to Run
 - `npm install`
 
