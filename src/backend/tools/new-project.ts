@@ -38,7 +38,8 @@ const projectFiles = {
       "genesys.js": "^0.0.102"
     },
     "devDependencies": {
-      "typescript": "^5.8.3"
+      "typescript": "^5.8.3",
+      "esbuild": "^0.25.4"
     }
   }
   `,
