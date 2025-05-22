@@ -40,7 +40,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <h1>Genesys</h1>
+        <h1>Genesys SDK</h1>
         <ProjectManagement />
       </div>
     </ThemeProvider>
