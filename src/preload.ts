@@ -14,6 +14,7 @@ const electronAPI: ElectronAPI = {
     chooseDirectory: () => ipcRenderer.invoke('os.chooseDirectory'),
     openPath: (path: string) => ipcRenderer.invoke('os.openPath', path),
     readDirectory: (path: string) => ipcRenderer.invoke('os.readDirectory', path),
+    exists: (path: string) => ipcRenderer.invoke('os.exists', path),
   },
 
   tools: {

@@ -209,11 +209,20 @@ export const ProjectManagement = () => {
     addLog('info', 'Initializing Genesys SDK');
     fetchTemplates();
 
-    // If we have a saved directory, log it and read its contents
-    if (projectState.selectedDirectory) {
-      addLog('info', `Loaded last used directory: ${projectState.selectedDirectory}`);
-      readSelectedDirectory(projectState.selectedDirectory);
-    }
+    const loadLastUsedDirectory = async () => {
+      if (projectState.selectedDirectory) {
+        if (await window.electronAPI.os.exists(projectState.selectedDirectory)) {
+          addLog('info', `Loaded last used directory: ${projectState.selectedDirectory}`);
+          readSelectedDirectory(projectState.selectedDirectory);
+        } else {
+          setProjectState(prev => ({
+            ...prev,
+            selectedDirectory: null,
+          }));
+        }
+      }
+    };
+    loadLastUsedDirectory();
   }, []);
 
   const readSelectedDirectory = async (directory: string) => {
@@ -458,8 +467,8 @@ export const ProjectManagement = () => {
             <strong>Current Project:</strong> {projectState.selectedDirectory}
           </div>
           <LoadingButton
-            size="small"
-            variant="outlined"
+            size="medium"
+            variant="contained"
             color="success"
             onClick={handleOpenDirectory}
             style={{ marginLeft: '10px' }}
@@ -468,8 +477,8 @@ export const ProjectManagement = () => {
             Open in Explorer
           </LoadingButton>
           <LoadingButton
-            size="small"
-            variant="outlined"
+            size="medium"
+            variant="contained"
             color="primary"
             onClick={handleChooseDirectory}
             style={{ marginLeft: '10px' }}
@@ -478,8 +487,8 @@ export const ProjectManagement = () => {
             Switch Project
           </LoadingButton>
           <LoadingButton
-            size="small"
-            variant="outlined"
+            size="medium"
+            variant="contained"
             color="primary"
             onClick={handleRefreshProject}
             style={{ marginLeft: '10px' }}
@@ -492,14 +501,14 @@ export const ProjectManagement = () => {
         <div className="directory-warning">
           <strong>Warning:</strong> No project selected.
           <LoadingButton
-            size="small"
+            size="medium"
             variant="contained"
             color="primary"
             onClick={handleChooseDirectory}
             style={{ marginLeft: '15px' }}
             sx={{ textTransform: 'none' }}
           >
-            Select Project Directory
+            Select Project
           </LoadingButton>
         </div>
       )}

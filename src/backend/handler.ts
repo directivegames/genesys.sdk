@@ -58,6 +58,10 @@ ipcMain.handle('os.readDirectory', async (_, path: string): Promise<string[] | n
   return fs.readdirSync(path).filter(file => !IgnoredFiles.includes(file));
 });
 
+ipcMain.handle('os.exists', async (_, path: string): Promise<boolean> => {
+  return fs.existsSync(path);
+});
+
 ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<ToolCallingResult> => {
   const res = await newProject(projectPath, templateId);
   if (res.error instanceof Error) {
