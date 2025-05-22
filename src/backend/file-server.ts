@@ -2,9 +2,11 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+import chokidar from 'chokidar';
 import cors from 'cors';
 import express from 'express';
 import multer from 'multer';
+import { WebSocketServer } from 'ws';
 
 import { logger } from './logging.js';
 
@@ -28,6 +30,7 @@ interface DirectoryListing {
 
 class FileServer {
   private server: ReturnType<express.Application['listen']> | null = null;
+  private wsServer: WebSocketServer | null = null;
   private port: number = 4000;
   private isRunning: boolean = false;
   private connections = new Set<any>(); // Track all open connections
@@ -209,6 +212,70 @@ class FileServer {
     return app;
   }
 
+  createWsServer(rootDir: string): WebSocketServer {
+    if (!this.server) {
+      throw new Error('Server must be initialized before creating WebSocket server');
+    }
+
+    const wss = new WebSocketServer({ server: this.server });
+
+    function broadcastChange(type: 'folder' | 'file', filePath: string, action: 'created' | 'modified' | 'deleted') {
+      const payload = JSON.stringify({
+        type,
+        path: filePath,
+        action
+      });
+      wss.clients.forEach(client => {
+        if (client.readyState === 1) { // 1 = OPEN
+          client.send(payload);
+        }
+      });
+    }
+
+    // Watch for file/folder changes using chokidar
+    const watcher = chokidar.watch(rootDir, {
+      persistent: true,
+      ignoreInitial: true,
+      depth: 99,
+    });
+
+    watcher
+      .on('add', filePath => {
+        const rel = path.relative(rootDir, filePath).replace(/\\/g, '/');
+        logger.log(`[watcher] add: ${rel}`);
+        broadcastChange('file', rel, 'created');
+      })
+      .on('change', filePath => {
+        const rel = path.relative(rootDir, filePath).replace(/\\/g, '/');
+        logger.log(`[watcher] change: ${rel}`);
+        broadcastChange('file', rel, 'modified');
+      })
+      .on('unlink', filePath => {
+        const rel = path.relative(rootDir, filePath).replace(/\\/g, '/');
+        logger.log(`[watcher] unlink: ${rel}`);
+        broadcastChange('file', rel, 'deleted');
+      })
+      .on('addDir', dirPath => {
+        const rel = path.relative(rootDir, dirPath).replace(/\\/g, '/');
+        logger.log(`[watcher] addDir: ${rel}`);
+        broadcastChange('folder', rel, 'created');
+      })
+      .on('unlinkDir', dirPath => {
+        const rel = path.relative(rootDir, dirPath).replace(/\\/g, '/');
+        logger.log(`[watcher] unlinkDir: ${rel}`);
+        broadcastChange('folder', rel, 'deleted');
+      });
+
+    wss.on('connection', ws => {
+      logger.log('WebSocket client connected');
+      ws.on('close', () => {
+        logger.log('WebSocket client disconnected');
+      });
+    });
+
+    return wss;
+  }
+
   async start(port: number, rootDir: string): Promise<void> {
     if (this.isRunning) {
       await this.stop();
@@ -236,6 +303,8 @@ class FileServer {
           logger.error('Failed to start file server:', err);
           reject(err);
         });
+
+        this.wsServer = this.createWsServer(rootDir);
       } catch (error: any) {
         logger.error('Failed to start file server:', error);
         reject(error);
@@ -251,6 +320,14 @@ class FileServer {
     return new Promise<void>((resolve, reject) => {
       try {
         logger.log('Stopping file server...');
+
+        // Close WebSocket server if it exists
+        if (this.wsServer) {
+          this.wsServer.close();
+          this.wsServer = null;
+          logger.log('WebSocket server stopped');
+        }
+
         this.server!.close(() => {
           this.isRunning = false;
           this.server = null;
