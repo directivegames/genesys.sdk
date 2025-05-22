@@ -15,7 +15,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
@@ -39,11 +42,13 @@ jobs:
 
       - name: Bump version
         id: bump-version
+        if: matrix.os == 'windows-latest'
         run: |
           npm version ${{ github.event.inputs.bump_type }} --no-git-tag-version
           echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Commit version bump
+        if: matrix.os == 'windows-latest'
         run: |
           git add package.json
           git commit -m "Bump version to ${{ steps.bump-version.outputs.new_version }}"
@@ -55,10 +60,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows artifacts
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: dist/*.exe
+
+      - name: Upload macOS artifacts
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: dist/*.dmg
 
   release:
     needs: build
@@ -75,16 +88,24 @@ jobs:
         id: package-version
         run: echo "version=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
 
-      - name: Download artifacts
+      - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
           name: windows-build
           path: windows-artifacts
 
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-build
+          path: macos-artifacts
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: windows-artifacts/*.exe
+          files: |
+            windows-artifacts/*.exe
+            macos-artifacts/*.dmg
           tag_name: v${{ steps.package-version.outputs.version }}
           name: Release v${{ steps.package-version.outputs.version }}
           draft: false
