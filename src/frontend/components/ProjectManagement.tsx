@@ -31,9 +31,12 @@ type ProjectState = {
   logs: LogEntry[];
 };
 
+// Constants for localStorage
+const STORAGE_KEY_DIRECTORY = 'genesys_last_directory';
+
 export const ProjectManagement = () => {
   const [projectState, setProjectState] = useState<ProjectState>({
-    selectedDirectory: null,
+    selectedDirectory: localStorage.getItem(STORAGE_KEY_DIRECTORY),
     serverStatus: {
       isRunning: false,
       port: 4000,
@@ -123,18 +126,29 @@ export const ProjectManagement = () => {
 
     addLog('info', 'Initializing Genesys SDK');
     fetchTemplates();
+
+    // If we have a saved directory, log it
+    if (projectState.selectedDirectory) {
+      addLog('info', `Loaded last used directory: ${projectState.selectedDirectory}`);
+    }
   }, []);
 
   const handleOpenDirectory = async () => {
     try {
       const directory = await window.electronAPI.os.openDirectory();
       if (directory) {
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY_DIRECTORY, directory);
+
         setProjectState(prev => ({
           ...prev,
           selectedDirectory: directory,
           error: null,
         }));
+
+        addLog('success', `Selected and saved directory: ${directory}`);
       } else {
+        // User canceled directory selection
       }
     } catch (error) {
       console.error('Error opening directory:', error);
@@ -270,13 +284,33 @@ export const ProjectManagement = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
+  const handleClearSavedDirectory = () => {
+    localStorage.removeItem(STORAGE_KEY_DIRECTORY);
+    setProjectState(prev => ({
+      ...prev,
+      selectedDirectory: null,
+    }));
+    addLog('info', 'Cleared saved directory');
+  };
+
   return (
     <div className="project-management">
       <h2>Project Manager</h2>
 
       {projectState.selectedDirectory ? (
         <div className="current-directory">
-          <strong>Current Directory:</strong> {projectState.selectedDirectory}
+          <div className="directory-content">
+            <strong>Current Directory:</strong> {projectState.selectedDirectory}
+          </div>
+          <LoadingButton
+            size="small"
+            variant="outlined"
+            color="primary"
+            onClick={handleClearSavedDirectory}
+            style={{ marginLeft: '10px' }}
+          >
+            Clear
+          </LoadingButton>
         </div>
       ) : (
         <div className="directory-warning">
