@@ -14,7 +14,7 @@ const createWindow = async () => {
     height: 700,
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/preload.js'),
     },
   });
 

@@ -3,11 +3,13 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
       "module": "CommonJS",
-      "outDir": "dist",
+      "outDir": "dist/preload",
       "rootDir": "src",
       "experimentalDecorators": true
     },
-    "include": ["src/backend/preload.ts"],
+    "include": [
+      "src/preload.ts",
+    ],
     "exclude": []
   }
   

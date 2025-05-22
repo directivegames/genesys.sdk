@@ -138,8 +138,7 @@ export async function newProject(projectPath: string, templateId: string): Promi
       if (files.length > 0) {
         return {
           success: false,
-          message: 'Project directory is not empty',
-          error: `The directory ${projectPath} already contains files. Please choose an empty directory.`
+          message: `The directory ${projectPath} already contains files. Please choose an empty directory.`
         };
       }
     } else {
@@ -171,8 +170,8 @@ export async function newProject(projectPath: string, templateId: string): Promi
   } catch (error) {
     return {
       success: false,
-      message: 'Failed to create project',
-      error: error instanceof Error ? error.message : String(error)
+      message: `Failed to create project: ${error}`,
+      error: error as Error,
     };
   }
 }

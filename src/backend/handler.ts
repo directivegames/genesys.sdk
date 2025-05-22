@@ -2,6 +2,8 @@ import fs from 'fs';
 
 import { dialog, ipcMain, shell } from 'electron';
 
+import { IpcSerializableError } from '../IpcSerializableError.js';
+
 import { IgnoredFiles } from './const.js';
 import { fileServer } from './file-server.js';
 import { buildProject } from './tools/build-project.js';
@@ -9,17 +11,22 @@ import { newProject, TEMPLATES } from './tools/new-project.js';
 
 import type { FileServerStatus, ProjectTemplate, ToolCallingResult } from '../api.js';
 
-
-ipcMain.handle('ping', () => {
-  return 'pong from main process';
+ipcMain.handle('fileServer.start', async (_, port: number, rootDir: string): Promise<Error | null> => {
+  try {
+    await fileServer.start(port, rootDir);
+    return null;
+  } catch (error) {
+    return IpcSerializableError.serialize(error as Error);
+  }
 });
 
-ipcMain.handle('fileServer.start', async (_, port: number, rootDir: string) => {
-  await fileServer.start(port, rootDir);
-});
-
-ipcMain.handle('fileServer.stop', async () => {
-  await fileServer.stop();
+ipcMain.handle('fileServer.stop', async (): Promise<Error | null> => {
+  try {
+    await fileServer.stop();
+    return null;
+  } catch (error) {
+    return IpcSerializableError.serialize(error as Error);
+  }
 });
 
 ipcMain.handle('fileServer.status', async (): Promise<FileServerStatus> => {
@@ -52,11 +59,19 @@ ipcMain.handle('os.readDirectory', async (_, path: string): Promise<string[] | n
 });
 
 ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<ToolCallingResult> => {
-  return await newProject(projectPath, templateId);
+  const res = await newProject(projectPath, templateId);
+  if (res.error instanceof Error) {
+    res.error = IpcSerializableError.serialize(res.error);
+  }
+  return res;
 });
 
 ipcMain.handle('tools.buildProject', async (_, projectPath: string): Promise<ToolCallingResult> => {
-  return await buildProject(projectPath);
+  const res = await buildProject(projectPath);
+  if (res.error instanceof Error) {
+    res.error = IpcSerializableError.serialize(res.error);
+  }
+  return res;
 });
 
 ipcMain.handle('tools.getProjectTemplates', async (): Promise<ProjectTemplate[]> => {

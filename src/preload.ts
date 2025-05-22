@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { ElectronAPI, LogCallback } from '../api';
+import type { ElectronAPI, LogCallback } from './api.js';
 
 // see handler.ts
 const electronAPI: ElectronAPI = {

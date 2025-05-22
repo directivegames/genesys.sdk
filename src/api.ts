@@ -6,7 +6,7 @@ export type FileServerStatus = {
 export type ToolCallingResult = {
     success: boolean;
     message: string;
-    error?: string;
+    error?: string | Error;
 }
 
 export type ProjectTemplate = {
@@ -18,8 +18,8 @@ export type LogCallback<T extends any[] = any[]> = (...data: T) => void;
 
 export type ElectronAPI = {
     fileServer: {
-        start: (port: number, rootDir: string) => Promise<void>;
-        stop: () => Promise<void>;
+        start: (port: number, rootDir: string) => Promise<Error | null>;
+        stop: () => Promise<Error | null>;
         status: () => Promise<FileServerStatus>;
     };
 

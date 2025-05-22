@@ -313,16 +313,14 @@ class FileServer {
           conn.on('close', () => this.connections.delete(conn));
         });
 
-        this.server.on('error', (err) => {
+        this.server.on('error', (err: Error) => {
           this.isRunning = false;
-          logger.error('Failed to start file server:', err);
           reject(err);
         });
 
         this.wsServer = this.createWsServer(rootDir);
       } catch (error: any) {
-        logger.error('Failed to start file server:', error);
-        reject(error);
+        reject(error as Error);
       }
     });
   }
@@ -356,7 +354,7 @@ class FileServer {
         this.connections.clear();
       } catch (error: any) {
         logger.error('Failed to stop file server:', error);
-        reject(error);
+        reject(error as Error);
       }
     });
   }

@@ -2,6 +2,8 @@ import { LoadingButton } from '@mui/lab';
 import { Alert, FormControl, InputLabel, MenuItem, Select, Snackbar } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
+import { IpcSerializableError } from '../../IpcSerializableError.js';
+
 import type { ProjectTemplate } from '../../api.js';
 import type { SelectChangeEvent} from '@mui/material';
 
@@ -139,27 +141,51 @@ export const ProjectManagement = () => {
     };
   }, []);
 
-  const addLog = (level: LogLevel = 'info', ...args: any[]) => {
-    const message = args.map(arg => {
-      if (arg === null) return 'null';
-      if (arg === undefined) return 'undefined';
-      if (typeof arg === 'object') {
-        try {
-          return JSON.stringify(arg, null, 2);
-        } catch (e) {
-          return '[Object]';
-        }
+  const addLog = (level: LogLevel = 'info', ...rawArgs: any[]) => {
+    const args = rawArgs.map(arg => IpcSerializableError.deserialize(arg));
+
+    const formatArg = (arg: any): string => {
+      if (arg === null)            return 'null';
+      if (arg === undefined)       return 'undefined';
+
+      if (arg instanceof Error) {
+        const header = `${arg.name}: ${arg.message}`;
+        return arg.stack ? `${header}\n${arg.stack}` : header;
       }
+
+      if (typeof arg === 'object') {
+        try { return JSON.stringify(arg, null, 2); }
+        catch { return '[Object]'; }
+      }
+
       return String(arg);
-    }).join(' ');
+    };
+
+    switch (level) {
+      case 'success':
+      case 'info':
+        console.log(...args);
+        break;
+      case 'warning':
+        console.warn(...args);
+        break;
+      case 'error':
+        console.error(...args);
+        break;
+    }
+
+    const message = args.map(formatArg).join(' ');
 
     setProjectState(prev => ({
       ...prev,
-      logs: [...prev.logs, {
-        timestamp: new Date(),
-        message,
-        level
-      }]
+      logs: [
+        ...prev.logs,
+        {
+          timestamp: new Date(),
+          message,
+          level,
+        },
+      ],
     }));
   };
 
@@ -176,8 +202,7 @@ export const ProjectManagement = () => {
         }));
         addLog('success', `Found ${templates.length} project templates`);
       } catch (error) {
-        console.error('Error fetching project templates:', error);
-        addLog('error', 'Error fetching project templates');
+        addLog('error', 'Error fetching project templates', error);
       }
     };
 
@@ -244,12 +269,20 @@ export const ProjectManagement = () => {
           throw new Error('No directory selected');
         }
 
-        await window.electronAPI.fileServer.start(
+        const error = await window.electronAPI.fileServer.start(
           projectState.serverStatus.port,
           projectState.selectedDirectory
         );
+        if (error) {
+          addLog('error', 'Error starting server', error);
+          return;
+        }
       } else {
-        await window.electronAPI.fileServer.stop();
+        const error = await window.electronAPI.fileServer.stop();
+        if (error) {
+          addLog('error', 'Error stopping server', error);
+          return;
+        }
 
         // Force update the status
         setTimeout(async () => {
@@ -298,12 +331,13 @@ export const ProjectManagement = () => {
         projectState.selectedTemplate
       );
 
-      if (result.error) {
-        addLog('error', 'Error creating project', result.error);
-      } else {
+      if (result.success) {
+        addLog('success', result.message);
         await window.electronAPI.os.openPath(projectState.selectedDirectory);
         // Read directory contents after creating project
         await readSelectedDirectory(projectState.selectedDirectory);
+      } else {
+        addLog('error', result.message, result.error);
       }
 
       setProjectState(prev => ({
@@ -389,10 +423,10 @@ export const ProjectManagement = () => {
         projectState.selectedDirectory
       );
 
-      if (result.error) {
-        addLog('error', 'Error building project', result.error);
+      if (result.success) {
+        addLog('success', result.message);
       } else {
-        addLog('success', 'Project built successfully');
+        addLog('error', result.message, result.error);
       }
 
       setProjectState(prev => ({
