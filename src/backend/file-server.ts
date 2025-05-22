@@ -9,6 +9,7 @@ import multer from 'multer';
 import { WebSocketServer } from 'ws';
 
 import { logger } from './logging.js';
+import { buildProject } from './tools/build-project.js';
 
 import type { Request as ExpressRequest } from 'express';
 import type { Request, Response } from 'express';
@@ -162,6 +163,19 @@ class FileServer {
         path: relativePath
       });
       logger.log(`File uploaded: ${absPath}`);
+    });
+
+    app.post('/api/build-project', async (req: Request, res: Response): Promise<void> => {
+      try {
+        const result = await buildProject(rootDir);
+        res.json({
+          success: result.success,
+          message: result.message,
+          error: result.error
+        });
+      } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+      }
     });
 
     app.post('/api/exec', (req: Request, res: Response): void => {
