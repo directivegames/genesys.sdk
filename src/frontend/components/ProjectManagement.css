@@ -86,6 +86,20 @@
   word-break: break-all;
 }
 
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.logs-header h3 {
+  margin: 0;
+  color: #e0e0e0;
+}
+
 .log-entry {
   margin-bottom: 4px;
   line-height: 1.4;

@@ -332,6 +332,13 @@ export const ProjectManagement = () => {
     }
   };
 
+  const handleClearLogs = () => {
+    setProjectState(prev => ({
+      ...prev,
+      logs: [],
+    }));
+  };
+
   return (
     <div className="project-management">
       <h2>Project Manager</h2>
@@ -434,6 +441,17 @@ export const ProjectManagement = () => {
         ></div>
 
         <div className="project-logs">
+          <div className="logs-header">
+            <h3>Logs</h3>
+            <LoadingButton
+              size="small"
+              variant="outlined"
+              color="secondary"
+              onClick={handleClearLogs}
+            >
+              Clear Logs
+            </LoadingButton>
+          </div>
           {projectState.logs.map((log, index) => (
             <div key={index} className={`log-entry log-entry-${log.level}`}>
               <span className="log-timestamp">[{formatTimestamp(log.timestamp)}]</span>
