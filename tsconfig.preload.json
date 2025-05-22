@@ -3,8 +3,10 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
       "module": "CommonJS",
-      "outDir": "dist"
+      "outDir": "dist",
+      "rootDir": "src"
     },
-    "include": ["src/preload.ts"]
+    "include": ["src/backend/preload.ts"],
+    "exclude": []
   }
   

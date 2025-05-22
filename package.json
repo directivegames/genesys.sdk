@@ -5,25 +5,26 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "dev:main": "tsc --watch -p tsconfig.json",
+    "dev:preload": "tsc --watch -p tsconfig.preload.json",
     "dev:vite": "vite",
-    "dev:electron": "cross-env NODE_ENV=development tsc-watch --project tsconfig.preload.json --onSuccess \"electron dist/main.js\"",
-    "dev": "concurrently -k -n VITE,ELECTRON \"npm run dev:vite\" \"npm run dev:electron\"",
-    "build": "vite build && tsc -p tsconfig.json && tsc -p tsconfig.preload.json",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron dist/backend/main.js",
+    "dev": "npm run compile && concurrently -k -n MAIN,PRELOAD,VITE \"npm run dev:main\" \"npm run dev:preload\" \"npm run dev:vite\" \"npm run dev:electron\"",
+    "compile": "tsc -p tsconfig.json && tsc -p tsconfig.preload.json",
+    "build": "vite build && npm run compile",
     "dist": "npm run build && electron-builder"
   },
   "build": {
     "appId": "com.directivegames.genesys.sdk",
     "productName": "Genesys-SDK",
     "files": [
-      "dist/**/*",
-      "dist/main.js",
-      "dist/preload.js"
+      "dist/**/*"
     ],
     "directories": {
       "buildResources": "build"
     },
     "extraMetadata": {
-      "main": "dist/main.js"
+      "main": "dist/backend/main.js"
     },
     "win": {
       "target": "nsis"
