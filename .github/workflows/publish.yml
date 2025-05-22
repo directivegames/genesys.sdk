@@ -112,6 +112,7 @@ jobs:
           path: macos-artifacts
 
       - name: Create GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -123,4 +124,31 @@ jobs:
           prerelease: false
           generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Notify Slack
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS="✅ *Genesys Launcher release succeeded!*"
+            COLOR="#36a64f"
+          else
+            STATUS="❌ *Genesys Launcher release failed!*"
+            COLOR="#ff0000"
+          fi
+
+          TEXT="$STATUS, *Version*: \`v${{ needs.version-bump.outputs.version }}\`, <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View on GitHub>"
+
+          PAYLOAD=$(jq -n \
+            --arg text "$TEXT" \
+            --arg color "$COLOR" \
+            '{
+              attachments: [{
+                color: $color,
+                text: $text
+              }]
+            }')
+
+          curl -X POST -H 'Content-type: application/json' \
+               --data "$PAYLOAD" \
+               ${{ secrets.SLACK_WEBHOOK_URL }} 
