@@ -422,8 +422,6 @@ export const ProjectManagement = () => {
 
   return (
     <div className="project-management">
-      <h2>Project Manager</h2>
-
       {projectState.selectedDirectory ? (
         <div className="current-directory">
           <div className="directory-content">
@@ -442,6 +440,15 @@ export const ProjectManagement = () => {
             size="small"
             variant="outlined"
             color="primary"
+            onClick={handleChooseDirectory}
+            style={{ marginLeft: '10px' }}
+          >
+            Change
+          </LoadingButton>
+          <LoadingButton
+            size="small"
+            variant="outlined"
+            color="primary"
             onClick={handleClearSavedDirectory}
             style={{ marginLeft: '10px' }}
           >
@@ -451,6 +458,15 @@ export const ProjectManagement = () => {
       ) : (
         <div className="directory-warning">
           <strong>Warning:</strong> No directory selected. Please select a directory to continue.
+          <LoadingButton
+            size="small"
+            variant="contained"
+            color="primary"
+            onClick={handleChooseDirectory}
+            style={{ marginLeft: '15px' }}
+          >
+            Select Directory
+          </LoadingButton>
         </div>
       )}
 
@@ -460,15 +476,6 @@ export const ProjectManagement = () => {
           style={{ width: `${projectState.leftPanelWidth}px` }}
         >
           <div className="controls">
-            <div className="control-group">
-              <LoadingButton
-                variant="contained"
-                onClick={ handleChooseDirectory }
-              >
-                Change Working Directory
-              </LoadingButton>
-            </div>
-
             {projectState.selectedDirectory && projectState.directoryContents !== null && (
               <>
                 {projectState.directoryContents.length === 0 ? (

@@ -164,6 +164,12 @@
   border-radius: 0 4px 4px 0;
   font-size: 14px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.directory-warning strong {
+  margin-right: 5px;
 }
 
 .error-message {

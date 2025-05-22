@@ -20,11 +20,29 @@ const theme = createTheme({
 });
 
 const App = () => {
+  const handleOpenEditor = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.electronAPI.os.openPath('https://web--genesys-ai.us-central1.hosted.app/');
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <h1>Genesys</h1>
+        <h1>Genesys <a
+          href="#"
+          onClick={handleOpenEditor}
+          style={{
+            fontSize: '1.0em',
+            marginLeft: '8px',
+            textDecoration: 'none',
+            color: theme.palette.primary.main,
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}
+        >
+          Open Editor
+        </a></h1>
         <ProjectManagement />
       </div>
     </ThemeProvider>
