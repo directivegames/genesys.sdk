@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev:vite": "vite",
-    "dev:electron": "tsc --watch",
-    "dev": "concurrently -k -n VITE,ELECTRON \"vite\" \"tsc --watch --preserveWatchOutput\" \"wait-on http://localhost:5173 && electron dist/main.js\"",
-    "build": "vite build && tsc",
+    "dev:electron": "cross-env NODE_ENV=development tsc-watch --project tsconfig.preload.json --onSuccess \"electron dist/main.js\"",
+    "dev": "concurrently -k -n VITE,ELECTRON \"npm run dev:vite\" \"npm run dev:electron\"",
+    "build": "vite build && tsc -p tsconfig.json && tsc -p tsconfig.preload.json",
     "dist": "npm run build && electron-builder"
   },
   "build": {
@@ -16,7 +16,8 @@
     "productName": "Genesys-SDK",
     "files": [
       "dist/**/*",
-      "dist/main.js"
+      "dist/main.js",
+      "dist/preload.js"
     ],
     "directories": {
       "buildResources": "build"
@@ -43,6 +44,7 @@
     "cross-env": "^7.0.3",
     "electron": "^36.2.1",
     "electron-builder": "^26.0.12",
+    "tsc-watch": "^6.3.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "wait-on": "^8.0.3"

@@ -1,0 +1,10 @@
+// tsconfig.preload.json
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "module": "CommonJS",
+      "outDir": "dist"
+    },
+    "include": ["src/preload.ts"]
+  }
+  
