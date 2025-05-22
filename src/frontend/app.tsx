@@ -1,5 +1,6 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { ProjectManagement } from './components/ProjectManagement.js';
@@ -20,6 +21,16 @@ const theme = createTheme({
 });
 
 const App = () => {
+  const [engineVersion, setEngineVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEngineVersion = async () => {
+      const version = await window.electronAPI.tools.getEngineVersion();
+      setEngineVersion(version);
+    };
+    fetchEngineVersion();
+  }, []);
+
   const handleOpenEditor = (e: React.MouseEvent) => {
     e.preventDefault();
     window.electronAPI.os.openPath('https://web--genesys-ai.us-central1.hosted.app/');
@@ -29,7 +40,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <h1>Genesys <a
+        <h1>Genesys ({engineVersion}) <a
           href="#"
           onClick={handleOpenEditor}
           style={{
