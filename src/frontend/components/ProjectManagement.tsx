@@ -196,7 +196,6 @@ export const ProjectManagement = () => {
         setProjectState(prev => ({
           ...prev,
           selectedDirectory: directory,
-          error: null,
         }));
 
         addLog('success', `Selected and saved directory: ${directory}`);
@@ -204,25 +203,15 @@ export const ProjectManagement = () => {
         // User canceled directory selection
       }
     } catch (error) {
-      console.error('Error opening directory:', error);
-      setProjectState(prev => ({
-        ...prev,
-        error: 'Failed to open directory',
-      }));
+      addLog('error', 'Failed to open directory', error);
     }
   };
 
   const handleToggleServer = async () => {
     try {
-      setProjectState(prev => ({ ...prev, error: null }));
-
       if (!projectState.serverStatus.isRunning) {
         if (!projectState.selectedDirectory) {
-          setProjectState(prev => ({
-            ...prev,
-            error: 'Please select a directory first',
-          }));
-          return;
+          throw new Error('No directory selected');
         }
 
         await window.electronAPI.fileServer.start(
@@ -248,11 +237,7 @@ export const ProjectManagement = () => {
         serverStatus: status,
       }));
     } catch (error) {
-      console.error('Error toggling server:', error);
-      setProjectState(prev => ({
-        ...prev,
-        error: 'Failed to toggle server',
-      }));
+      addLog('error', 'Error toggling server', error);
     }
   };
 
@@ -261,26 +246,16 @@ export const ProjectManagement = () => {
       ...prev,
       selectedTemplate: e.target.value,
     }));
-
-    const selectedTemplateName = projectState.templates.find(t => t.id === e.target.value)?.name;
   };
 
   const handleCreateProject = async () => {
     try {
       if (!projectState.selectedDirectory) {
-        setProjectState(prev => ({
-          ...prev,
-          error: 'Please select a directory first',
-        }));
-        return;
+        throw new Error('No directory selected');
       }
 
       if (!projectState.selectedTemplate) {
-        setProjectState(prev => ({
-          ...prev,
-          error: 'Please select a template',
-        }));
-        return;
+        throw new Error('No template selected');
       }
 
       const templateName = projectState.templates.find(t => t.id === projectState.selectedTemplate)?.name;
@@ -288,7 +263,6 @@ export const ProjectManagement = () => {
       setProjectState(prev => ({
         ...prev,
         isCreatingProject: true,
-        error: null,
       }));
 
       const result = await window.electronAPI.tools.createProject(
@@ -296,10 +270,13 @@ export const ProjectManagement = () => {
         projectState.selectedTemplate
       );
 
+      if (result.error) {
+        addLog('error', 'Error creating project', result.error);
+      }
+
       setProjectState(prev => ({
         ...prev,
         isCreatingProject: false,
-        error: result.success ? null : result.error ?? 'Failed to create project',
         notification: {
           open: true,
           message: result.success
@@ -309,11 +286,10 @@ export const ProjectManagement = () => {
         }
       }));
     } catch (error) {
-      console.error('Error creating project:', error);
+      addLog('error', 'Error creating project', error);
       setProjectState(prev => ({
         ...prev,
         isCreatingProject: false,
-        error: 'Failed to create project',
         notification: {
           open: true,
           message: 'Failed to create project due to an unexpected error',
