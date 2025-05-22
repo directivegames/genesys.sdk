@@ -17,9 +17,16 @@
   },
   "build": {
     "appId": "com.directivegames.genesys.sdk",
-    "productName": "Genesys-SDK",
+    "productName": "Genesys",
     "files": [
-      "dist/**/*"
+      "dist/**/*",
+      {
+        "from": "node_modules/three/examples/jsm",
+        "to": "node_modules/three/examples/jsm",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "directories": {
       "buildResources": "build"
