@@ -10,6 +10,9 @@ export type ElectronAPI = {
         stop: () => Promise<void>;
         status: () => Promise<FileServerStatus>;
     };
+    os: {
+        openDirectory: () => Promise<string | null>;
+    }
 };
 
 declare global {

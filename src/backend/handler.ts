@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { dialog, ipcMain } from 'electron';
 
 import { fileServer } from './file-server.js';
 
@@ -22,6 +22,17 @@ ipcMain.handle('fileServer.status', async (): Promise<FileServerStatus> => {
     isRunning: fileServer.isServerRunning(),
     port: fileServer.getPort(),
   };
+});
+
+ipcMain.handle('os.openDirectory', async (): Promise<string | null> => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+  });
+  if (canceled) {
+    return null;
+  } else {
+    return filePaths[0];
+  }
 });
 
 export {};

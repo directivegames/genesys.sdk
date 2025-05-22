@@ -10,6 +10,9 @@ const electronAPI: ElectronAPI = {
     stop: () => ipcRenderer.invoke('fileServer.stop'),
     status: () => ipcRenderer.invoke('fileServer.status'),
   },
+  os: {
+    openDirectory: () => ipcRenderer.invoke('os.openDirectory'),
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
