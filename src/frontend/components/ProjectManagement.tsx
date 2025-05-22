@@ -52,6 +52,26 @@ export const ProjectManagement = () => {
 
   const logEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const removeLogListener = window.electronAPI.logging.onLog((...args) => {
+      addLog('info', '[Electron]', ...args);
+    });
+
+    const removeErrorListener = window.electronAPI.logging.onError((...args) => {
+      addLog('error', '[Electron]', ...args);
+    });
+
+    const removeWarnListener = window.electronAPI.logging.onWarn((...args) => {
+      addLog('warning', '[Electron]', ...args);
+    });
+
+    return () => {
+      removeLogListener();
+      removeErrorListener();
+      removeWarnListener();
+    };
+  }, []);
+
   // Scroll to bottom when logs update
   useEffect(() => {
     if (logEndRef.current) {
@@ -59,7 +79,20 @@ export const ProjectManagement = () => {
     }
   }, [projectState.logs]);
 
-  const addLog = (message: string, level: LogLevel = 'info') => {
+  const addLog = (level: LogLevel = 'info', ...args: any[]) => {
+    const message = args.map(arg => {
+      if (arg === null) return 'null';
+      if (arg === undefined) return 'undefined';
+      if (typeof arg === 'object') {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch (e) {
+          return '[Object]';
+        }
+      }
+      return String(arg);
+    }).join(' ');
+
     setProjectState(prev => ({
       ...prev,
       logs: [...prev.logs, {
@@ -72,57 +105,28 @@ export const ProjectManagement = () => {
 
   // Check server status on component mount and fetch templates
   useEffect(() => {
-    const checkServerStatus = async () => {
-      try {
-        const status = await window.electronAPI.fileServer.status();
-        setProjectState(prev => ({
-          ...prev,
-          serverStatus: status,
-          error: null,
-        }));
-
-        if (status.isRunning !== projectState.serverStatus.isRunning) {
-          addLog(
-            status.isRunning
-              ? `Server started on port ${status.port}`
-              : 'Server stopped',
-            status.isRunning ? 'success' : 'info'
-          );
-        }
-      } catch (error) {
-        console.error('Error checking server status:', error);
-        addLog('Error checking server status', 'error');
-      }
-    };
-
     const fetchTemplates = async () => {
       try {
-        addLog('Fetching available project templates...', 'info');
+        addLog('info', 'Fetching available project templates...');
         const templates = await window.electronAPI.tools.getProjectTemplates();
         setProjectState(prev => ({
           ...prev,
           templates,
           selectedTemplate: templates.length > 0 ? templates[0].id : null,
         }));
-        addLog(`Found ${templates.length} project templates`, 'success');
+        addLog('success', `Found ${templates.length} project templates`);
       } catch (error) {
         console.error('Error fetching project templates:', error);
-        addLog('Error fetching project templates', 'error');
+        addLog('error', 'Error fetching project templates');
       }
     };
 
-    addLog('Initializing Genesys SDK', 'info');
-    checkServerStatus();
+    addLog('info', 'Initializing Genesys SDK');
     fetchTemplates();
-
-    // Set up interval to check status every 5 seconds
-    const interval = setInterval(checkServerStatus, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleOpenDirectory = async () => {
     try {
-      addLog('Opening directory selector...', 'info');
       const directory = await window.electronAPI.os.openDirectory();
       if (directory) {
         setProjectState(prev => ({
@@ -130,9 +134,7 @@ export const ProjectManagement = () => {
           selectedDirectory: directory,
           error: null,
         }));
-        addLog(`Selected directory: ${directory}`, 'success');
       } else {
-        addLog('No directory selected', 'warning');
       }
     } catch (error) {
       console.error('Error opening directory:', error);
@@ -140,7 +142,6 @@ export const ProjectManagement = () => {
         ...prev,
         error: 'Failed to open directory',
       }));
-      addLog('Failed to open directory', 'error');
     }
   };
 
@@ -154,17 +155,14 @@ export const ProjectManagement = () => {
             ...prev,
             error: 'Please select a directory first',
           }));
-          addLog('Cannot start server: No directory selected', 'error');
           return;
         }
 
-        addLog(`Starting server on port ${projectState.serverStatus.port}...`, 'info');
         await window.electronAPI.fileServer.start(
           projectState.serverStatus.port,
           projectState.selectedDirectory
         );
       } else {
-        addLog('Stopping server...', 'info');
         await window.electronAPI.fileServer.stop();
 
         // Force update the status
@@ -188,7 +186,6 @@ export const ProjectManagement = () => {
         ...prev,
         error: 'Failed to toggle server',
       }));
-      addLog('Failed to toggle server', 'error');
     }
   };
 
@@ -199,7 +196,6 @@ export const ProjectManagement = () => {
     }));
 
     const selectedTemplateName = projectState.templates.find(t => t.id === e.target.value)?.name;
-    addLog(`Selected template: ${selectedTemplateName ?? e.target.value}`, 'info');
   };
 
   const handleCreateProject = async () => {
@@ -209,7 +205,6 @@ export const ProjectManagement = () => {
           ...prev,
           error: 'Please select a directory first',
         }));
-        addLog('Cannot create project: No directory selected', 'error');
         return;
       }
 
@@ -218,12 +213,10 @@ export const ProjectManagement = () => {
           ...prev,
           error: 'Please select a template',
         }));
-        addLog('Cannot create project: No template selected', 'error');
         return;
       }
 
       const templateName = projectState.templates.find(t => t.id === projectState.selectedTemplate)?.name;
-      addLog(`Creating project from template "${templateName}" in ${projectState.selectedDirectory}...`, 'info');
 
       setProjectState(prev => ({
         ...prev,
@@ -248,13 +241,6 @@ export const ProjectManagement = () => {
           severity: result.success ? 'success' : 'error'
         }
       }));
-
-      addLog(
-        result.success
-          ? `Project successfully created in ${projectState.selectedDirectory}`
-          : `Failed to create project: ${result.error ?? 'Unknown error'}`,
-        result.success ? 'success' : 'error'
-      );
     } catch (error) {
       console.error('Error creating project:', error);
       setProjectState(prev => ({
@@ -267,7 +253,6 @@ export const ProjectManagement = () => {
           severity: 'error'
         }
       }));
-      addLog('Failed to create project due to an unexpected error', 'error');
     }
   };
 

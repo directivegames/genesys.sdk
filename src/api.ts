@@ -14,19 +14,28 @@ export type ProjectTemplate = {
     name: string;
 }
 
+export type LogCallback<T extends any[] = any[]> = (...data: T) => void;
+
 export type ElectronAPI = {
-    ping: () => Promise<string>;
     fileServer: {
         start: (port: number, rootDir: string) => Promise<void>;
         stop: () => Promise<void>;
         status: () => Promise<FileServerStatus>;
     };
+
     os: {
         openDirectory: () => Promise<string | null>;
     }
+
     tools: {
         createProject: (projectPath: string, templateId: string) => Promise<CreateProjectResult>;
         getProjectTemplates: () => Promise<ProjectTemplate[]>;
+    }
+
+    logging: {
+        onLog: (callback: LogCallback) => () => void;
+        onError: (callback: LogCallback) => () => void;
+        onWarn: (callback: LogCallback) => () => void;
     }
 };
 

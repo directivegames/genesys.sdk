@@ -1,11 +1,12 @@
 import { execSync } from 'child_process';
-import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 
 import cors from 'cors';
 import express from 'express';
 import multer from 'multer';
+
+import { logger } from './logging.js';
 
 import type { Request as ExpressRequest } from 'express';
 import type { Request, Response } from 'express';
@@ -25,15 +26,13 @@ interface DirectoryListing {
     files: FileItem[];
 }
 
-class FileServer extends EventEmitter {
+class FileServer {
   private server: ReturnType<express.Application['listen']> | null = null;
   private port: number = 4000;
   private isRunning: boolean = false;
   private connections = new Set<any>(); // Track all open connections
 
-  constructor() {
-    super();
-  }
+  constructor() {}
 
   createApp(rootDir: string): express.Application {
     const app = express();
@@ -141,7 +140,7 @@ class FileServer extends EventEmitter {
 
       fs.writeFileSync(absPath, req.body.content ?? '');
       res.json({ success: true, path: req.body.path });
-      this.log(`File updated: ${absPath}`);
+      logger.log(`File updated: ${absPath}`);
     });
 
     app.post('/api/files/upload', upload.single('file'), (req: Request, res: Response): void => {
@@ -159,7 +158,7 @@ class FileServer extends EventEmitter {
         filename: req.file.originalname,
         path: relativePath
       });
-      this.log(`File uploaded: ${absPath}`);
+      logger.log(`File uploaded: ${absPath}`);
     });
 
     app.post('/api/exec', (req: Request, res: Response): void => {
@@ -168,7 +167,7 @@ class FileServer extends EventEmitter {
         return;
       }
 
-      this.log(`Executing command: ${req.body.command}`);
+      logger.log(`Executing command: ${req.body.command}`);
       try {
         execSync(req.body.command);
       } catch (error) {
@@ -180,7 +179,7 @@ class FileServer extends EventEmitter {
         success: true,
         command: req.body.command
       });
-      this.log(`Command executed: ${req.body.command}`);
+      logger.log(`Command executed: ${req.body.command}`);
     });
 
     app.delete('/api/files', (req: Request, res: Response): void => {
@@ -204,7 +203,7 @@ class FileServer extends EventEmitter {
         fs.unlinkSync(absPath);
       }
       res.json({ success: true, path: req.query.path });
-      this.log(`File deleted: ${absPath}`);
+      logger.log(`File deleted: ${absPath}`);
     });
 
     return app;
@@ -222,7 +221,7 @@ class FileServer extends EventEmitter {
         const app = this.createApp(rootDir);
         this.server = app.listen(this.port, () => {
           this.isRunning = true;
-          this.log(`File server started on port ${this.port} at ${rootDir}`);
+          logger.log(`File server started on port ${this.port} at ${rootDir}`);
           resolve();
         });
 
@@ -234,11 +233,11 @@ class FileServer extends EventEmitter {
 
         this.server.on('error', (err) => {
           this.isRunning = false;
-          this.error('Failed to start file server:', err);
+          logger.error('Failed to start file server:', err);
           reject(err);
         });
       } catch (error: any) {
-        this.error('Failed to start file server:', error);
+        logger.error('Failed to start file server:', error);
         reject(error);
       }
     });
@@ -251,20 +250,20 @@ class FileServer extends EventEmitter {
 
     return new Promise<void>((resolve, reject) => {
       try {
-        this.log('Stopping file server...');
+        logger.log('Stopping file server...');
         this.server!.close(() => {
           this.isRunning = false;
           this.server = null;
-          this.log('File server stopped');
+          logger.log('File server stopped');
           resolve();
         });
-        this.log(`Destroying ${this.connections.size} connections.`);
+        logger.log(`Destroying ${this.connections.size} connections.`);
         for (const conn of this.connections) {
           conn.destroy();
         }
         this.connections.clear();
       } catch (error: any) {
-        this.error('Failed to stop file server:', error);
+        logger.error('Failed to stop file server:', error);
         reject(error);
       }
     });
@@ -276,16 +275,6 @@ class FileServer extends EventEmitter {
 
   getPort() {
     return this.port;
-  }
-
-  log(...params: any[]) {
-    console.log(...params);
-    this.emit('log', ...params);
-  }
-
-  error(...params: any[]) {
-    console.error(...params);
-    this.emit('error', ...params);
   }
 }
 

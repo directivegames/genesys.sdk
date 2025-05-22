@@ -1,6 +1,5 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { ProjectManagement } from './components/ProjectManagement.js';
@@ -21,21 +20,6 @@ const theme = createTheme({
 });
 
 const App = () => {
-  const [pingResponse, setPingResponse] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const response = await window.electronAPI.ping();
-        setPingResponse(response);
-      } catch (error) {
-        console.error('Error connecting to Electron:', error);
-      }
-    };
-
-    checkConnection();
-  }, []);
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -49,4 +33,3 @@ const App = () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
 
-window.electronAPI.ping().then(console.log);
