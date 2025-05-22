@@ -379,14 +379,10 @@ export const ProjectManagement = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
-  const handleClearSavedDirectory = () => {
-    localStorage.removeItem(STORAGE_KEY_DIRECTORY);
-    setProjectState(prev => ({
-      ...prev,
-      selectedDirectory: null,
-      directoryContents: null,
-    }));
-    addLog('info', 'Cleared saved directory');
+  const handleRefreshProject = async () => {
+    if (projectState.selectedDirectory) {
+      await readSelectedDirectory(projectState.selectedDirectory);
+    }
   };
 
   const handleOpenDirectory = async () => {
@@ -459,7 +455,7 @@ export const ProjectManagement = () => {
       {projectState.selectedDirectory ? (
         <div className="current-directory">
           <div className="directory-content">
-            <strong>Current Working Directory:</strong> {projectState.selectedDirectory}
+            <strong>Current Project:</strong> {projectState.selectedDirectory}
           </div>
           <LoadingButton
             size="small"
@@ -467,6 +463,7 @@ export const ProjectManagement = () => {
             color="success"
             onClick={handleOpenDirectory}
             style={{ marginLeft: '10px' }}
+            sx={{ textTransform: 'none' }}
           >
             Open in Explorer
           </LoadingButton>
@@ -476,30 +473,33 @@ export const ProjectManagement = () => {
             color="primary"
             onClick={handleChooseDirectory}
             style={{ marginLeft: '10px' }}
+            sx={{ textTransform: 'none' }}
           >
-            Change
+            Switch Project
           </LoadingButton>
           <LoadingButton
             size="small"
             variant="outlined"
             color="primary"
-            onClick={handleClearSavedDirectory}
+            onClick={handleRefreshProject}
             style={{ marginLeft: '10px' }}
+            sx={{ textTransform: 'none' }}
           >
-            Clear
+            Refresh
           </LoadingButton>
         </div>
       ) : (
         <div className="directory-warning">
-          <strong>Warning:</strong> No directory selected. Please select a directory to continue.
+          <strong>Warning:</strong> No project selected.
           <LoadingButton
             size="small"
             variant="contained"
             color="primary"
             onClick={handleChooseDirectory}
             style={{ marginLeft: '15px' }}
+            sx={{ textTransform: 'none' }}
           >
-            Select Directory
+            Select Project Directory
           </LoadingButton>
         </div>
       )}
