@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import type { ProjectTemplate } from '../../api.js';
+
 type ProjectState = {
   selectedDirectory: string | null;
   serverStatus: {
@@ -7,6 +9,9 @@ type ProjectState = {
     port: number;
   };
   error: string | null;
+  templates: ProjectTemplate[];
+  selectedTemplate: string | null;
+  isCreatingProject: boolean;
 };
 
 export const ProjectManagement = () => {
@@ -17,9 +22,12 @@ export const ProjectManagement = () => {
       port: 4000,
     },
     error: null,
+    templates: [],
+    selectedTemplate: null,
+    isCreatingProject: false,
   });
 
-  // Check server status on component mount
+  // Check server status on component mount and fetch templates
   useEffect(() => {
     const checkServerStatus = async () => {
       try {
@@ -34,7 +42,21 @@ export const ProjectManagement = () => {
       }
     };
 
+    const fetchTemplates = async () => {
+      try {
+        const templates = await window.electronAPI.tools.getProjectTemplates();
+        setProjectState(prev => ({
+          ...prev,
+          templates,
+          selectedTemplate: templates.length > 0 ? templates[0].id : null,
+        }));
+      } catch (error) {
+        console.error('Error fetching project templates:', error);
+      }
+    };
+
     checkServerStatus();
+    fetchTemplates();
 
     // Set up interval to check status every 5 seconds
     const interval = setInterval(checkServerStatus, 5000);
@@ -104,6 +126,61 @@ export const ProjectManagement = () => {
     }
   };
 
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setProjectState(prev => ({
+      ...prev,
+      selectedTemplate: e.target.value,
+    }));
+  };
+
+  const handleCreateProject = async () => {
+    try {
+      if (!projectState.selectedDirectory) {
+        setProjectState(prev => ({
+          ...prev,
+          error: 'Please select a directory first',
+        }));
+        return;
+      }
+
+      if (!projectState.selectedTemplate) {
+        setProjectState(prev => ({
+          ...prev,
+          error: 'Please select a template',
+        }));
+        return;
+      }
+
+      setProjectState(prev => ({
+        ...prev,
+        isCreatingProject: true,
+        error: null,
+      }));
+
+      const result = await window.electronAPI.tools.createProject(
+        projectState.selectedDirectory,
+        projectState.selectedTemplate
+      );
+
+      setProjectState(prev => ({
+        ...prev,
+        isCreatingProject: false,
+        error: result.success ? null : result.error ?? 'Failed to create project',
+      }));
+
+      if (result.success) {
+        // Maybe refresh or update UI after successful creation
+      }
+    } catch (error) {
+      console.error('Error creating project:', error);
+      setProjectState(prev => ({
+        ...prev,
+        isCreatingProject: false,
+        error: 'Failed to create project',
+      }));
+    }
+  };
+
   return (
     <div className="project-management">
       <h2>Project Management</h2>
@@ -140,6 +217,28 @@ export const ProjectManagement = () => {
           <div className="server-status">
             Status: {projectState.serverStatus.isRunning ? 'Running' : 'Stopped'}
           </div>
+        </div>
+
+        <div className="control-group">
+          <div className="template-selection">
+            <select
+              value={projectState.selectedTemplate ?? ''}
+              onChange={handleTemplateChange}
+              disabled={projectState.isCreatingProject}
+            >
+              {projectState.templates.map(template => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleCreateProject}
+            disabled={!projectState.selectedDirectory || !projectState.selectedTemplate || projectState.isCreatingProject}
+          >
+            {projectState.isCreatingProject ? 'Creating...' : 'Create New Project'}
+          </button>
         </div>
       </div>
     </div>

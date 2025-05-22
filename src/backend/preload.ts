@@ -13,6 +13,10 @@ const electronAPI: ElectronAPI = {
   os: {
     openDirectory: () => ipcRenderer.invoke('os.openDirectory'),
   },
+  tools: {
+    createProject: (projectPath: string, templateId: string) => ipcRenderer.invoke('tools.createProject', projectPath, templateId),
+    getProjectTemplates: () => ipcRenderer.invoke('tools.getProjectTemplates'),
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
