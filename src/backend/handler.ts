@@ -1,4 +1,4 @@
-import { dialog, ipcMain } from 'electron';
+import { dialog, ipcMain, shell } from 'electron';
 
 import { fileServer } from './file-server.js';
 import { newProject, TEMPLATES } from './tools/new-project.js';
@@ -34,6 +34,10 @@ ipcMain.handle('os.chooseDirectory', async (): Promise<string | null> => {
   } else {
     return filePaths[0];
   }
+});
+
+ipcMain.handle('os.openPath', async (_, path: string): Promise<void> => {
+  await shell.openPath(path);
 });
 
 ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<CreateProjectResult> => {

@@ -258,8 +258,6 @@ export const ProjectManagement = () => {
         throw new Error('No template selected');
       }
 
-      const templateName = projectState.templates.find(t => t.id === projectState.selectedTemplate)?.name;
-
       setProjectState(prev => ({
         ...prev,
         isCreatingProject: true,
@@ -272,6 +270,8 @@ export const ProjectManagement = () => {
 
       if (result.error) {
         addLog('error', 'Error creating project', result.error);
+      } else {
+        await window.electronAPI.os.openPath(projectState.selectedDirectory);
       }
 
       setProjectState(prev => ({
@@ -322,6 +322,16 @@ export const ProjectManagement = () => {
     addLog('info', 'Cleared saved directory');
   };
 
+  const handleOpenDirectory = async () => {
+    if (projectState.selectedDirectory) {
+      try {
+        await window.electronAPI.os.openPath(projectState.selectedDirectory);
+      } catch (error) {
+        addLog('error', 'Failed to open directory', error);
+      }
+    }
+  };
+
   return (
     <div className="project-management">
       <h2>Project Manager</h2>
@@ -331,6 +341,15 @@ export const ProjectManagement = () => {
           <div className="directory-content">
             <strong>Current Directory:</strong> {projectState.selectedDirectory}
           </div>
+          <LoadingButton
+            size="small"
+            variant="outlined"
+            color="success"
+            onClick={handleOpenDirectory}
+            style={{ marginLeft: '10px' }}
+          >
+            Open
+          </LoadingButton>
           <LoadingButton
             size="small"
             variant="outlined"
@@ -356,7 +375,7 @@ export const ProjectManagement = () => {
             <div className="control-group">
               <LoadingButton
                 variant="contained"
-                onClick={handleChooseDirectory}
+                onClick={ handleChooseDirectory }
               >
                 Open Directory
               </LoadingButton>

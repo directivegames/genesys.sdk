@@ -25,6 +25,7 @@ export type ElectronAPI = {
 
     os: {
         chooseDirectory: () => Promise<string | null>;
+        openPath: (path: string) => Promise<void>;
     }
 
     tools: {
