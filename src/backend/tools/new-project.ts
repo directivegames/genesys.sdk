@@ -9,7 +9,7 @@ import { logger } from '../logging.js';
 import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME } from './const.js';
 import * as T from './project-templates/index.js';
 
-import type { CreateProjectResult, ProjectTemplate } from '../../api.js';
+import type { ProjectTemplate, ToolCallingResult } from '../../api.js';
 
 
 T.loadTemplates();
@@ -129,7 +129,7 @@ function runNpmCommands(directory: string, commands: string[]): void {
   }
 }
 
-export async function newProject(projectPath: string, templateId: string): Promise<CreateProjectResult> {
+export async function newProject(projectPath: string, templateId: string): Promise<ToolCallingResult> {
   logger.log(`Creating project at ${projectPath} using ${templateId} template`);
   try {
     if (fs.existsSync(projectPath)) {

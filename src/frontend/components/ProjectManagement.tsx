@@ -22,6 +22,7 @@ type ProjectState = {
   templates: ProjectTemplate[];
   selectedTemplate: string | null;
   isCreatingProject: boolean;
+  isBuildingProject: boolean;
   notification: {
     open: boolean;
     message: string;
@@ -47,6 +48,7 @@ export const ProjectManagement = () => {
     templates: [],
     selectedTemplate: null,
     isCreatingProject: false,
+    isBuildingProject: false,
     notification: {
       open: false,
       message: '',
@@ -339,6 +341,54 @@ export const ProjectManagement = () => {
     }));
   };
 
+  const handleBuildProject = async () => {
+    try {
+      if (!projectState.selectedDirectory) {
+        throw new Error('No directory selected');
+      }
+
+      setProjectState(prev => ({
+        ...prev,
+        isBuildingProject: true,
+      }));
+
+      addLog('info', `Building project in ${projectState.selectedDirectory}...`);
+
+      const result = await window.electronAPI.tools.buildProject(
+        projectState.selectedDirectory
+      );
+
+      if (result.error) {
+        addLog('error', 'Error building project', result.error);
+      } else {
+        addLog('success', 'Project built successfully');
+      }
+
+      setProjectState(prev => ({
+        ...prev,
+        isBuildingProject: false,
+        notification: {
+          open: true,
+          message: result.success
+            ? 'Project built successfully'
+            : `Failed to build project: ${result.error ?? 'Unknown error'}`,
+          severity: result.success ? 'success' : 'error'
+        }
+      }));
+    } catch (error) {
+      addLog('error', 'Error building project', error);
+      setProjectState(prev => ({
+        ...prev,
+        isBuildingProject: false,
+        notification: {
+          open: true,
+          message: 'Failed to build project due to an unexpected error',
+          severity: 'error'
+        }
+      }));
+    }
+  };
+
   return (
     <div className="project-management">
       <h2>Project Manager</h2>
@@ -398,6 +448,18 @@ export const ProjectManagement = () => {
                 {projectState.serverStatus.isRunning
                   ? `Stop File Server (Port: ${projectState.serverStatus.port})`
                   : 'Start File Server'}
+              </LoadingButton>
+            </div>
+
+            <div className="control-group">
+              <LoadingButton
+                variant="contained"
+                onClick={handleBuildProject}
+                color="info"
+                disabled={!projectState.selectedDirectory || projectState.isBuildingProject}
+                loading={projectState.isBuildingProject}
+              >
+                Build Project
               </LoadingButton>
             </div>
 

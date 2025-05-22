@@ -1,9 +1,10 @@
 import { dialog, ipcMain, shell } from 'electron';
 
 import { fileServer } from './file-server.js';
+import { buildProject } from './tools/build-project.js';
 import { newProject, TEMPLATES } from './tools/new-project.js';
 
-import type { CreateProjectResult, FileServerStatus, ProjectTemplate } from '../api.js';
+import type { FileServerStatus, ProjectTemplate, ToolCallingResult } from '../api.js';
 
 
 ipcMain.handle('ping', () => {
@@ -40,8 +41,12 @@ ipcMain.handle('os.openPath', async (_, path: string): Promise<void> => {
   await shell.openPath(path);
 });
 
-ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<CreateProjectResult> => {
+ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<ToolCallingResult> => {
   return await newProject(projectPath, templateId);
+});
+
+ipcMain.handle('tools.buildProject', async (_, projectPath: string): Promise<ToolCallingResult> => {
+  return await buildProject(projectPath);
 });
 
 ipcMain.handle('tools.getProjectTemplates', async (): Promise<ProjectTemplate[]> => {

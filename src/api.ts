@@ -3,7 +3,7 @@ export type FileServerStatus = {
     port: number;
 }
 
-export type CreateProjectResult = {
+export type ToolCallingResult = {
     success: boolean;
     message: string;
     error?: string;
@@ -29,8 +29,9 @@ export type ElectronAPI = {
     }
 
     tools: {
-        createProject: (projectPath: string, templateId: string) => Promise<CreateProjectResult>;
+        createProject: (projectPath: string, templateId: string) => Promise<ToolCallingResult>;
         getProjectTemplates: () => Promise<ProjectTemplate[]>;
+        buildProject: (projectPath: string) => Promise<ToolCallingResult>;
     }
 
     logging: {
