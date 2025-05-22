@@ -14,12 +14,8 @@ on:
           - major
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-
+  version-bump:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,9 +28,6 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions Bot"
@@ -42,17 +35,45 @@ jobs:
 
       - name: Bump version
         id: bump-version
-        if: matrix.os == 'windows-latest'
         run: |
           npm version ${{ github.event.inputs.bump_type }} --no-git-tag-version
           echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Commit version bump
-        if: matrix.os == 'windows-latest'
+      - name: Commit and push version bump
         run: |
           git add package.json
           git commit -m "Bump version to ${{ steps.bump-version.outputs.new_version }}"
           git push
+
+      - name: Set output
+        id: set-version
+        run: echo "version=${{ steps.bump-version.outputs.new_version }}" >> $GITHUB_OUTPUT
+
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+
+  build:
+    needs: version-bump
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build application
         run: npm run dist
@@ -74,20 +95,10 @@ jobs:
           path: dist/*.dmg
 
   release:
-    needs: build
+    needs: [version-bump, build]
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.ref }}
-
-      - name: Get version from package.json
-        id: package-version
-        run: echo "version=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
-
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
@@ -106,8 +117,8 @@ jobs:
           files: |
             windows-artifacts/*.exe
             macos-artifacts/*.dmg
-          tag_name: v${{ steps.package-version.outputs.version }}
-          name: Release v${{ steps.package-version.outputs.version }}
+          tag_name: v${{ needs.version-bump.outputs.version }}
+          name: Release v${{ needs.version-bump.outputs.version }}
           draft: false
           prerelease: false
           generate_release_notes: true
