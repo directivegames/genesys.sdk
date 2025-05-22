@@ -12,7 +12,6 @@ import type { Request, Response } from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 
-
 interface FileItem {
     name: string;
     path: string;
@@ -30,6 +29,7 @@ class FileServer extends EventEmitter {
   private server: ReturnType<express.Application['listen']> | null = null;
   private port: number = 4000;
   private isRunning: boolean = false;
+  private connections = new Set<any>(); // Track all open connections
 
   constructor() {
     super();
@@ -47,12 +47,9 @@ class FileServer extends EventEmitter {
       destination: (req: ExpressRequest<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
         const uploadPath = req.headers['x-upload-path'] as string || '';
         const absPath: string = path.join(rootDir, uploadPath);
-
-        // Create directory if it doesn't exist
         if (!fs.existsSync(absPath)) {
           fs.mkdirSync(absPath, { recursive: true });
         }
-
         cb(null, absPath);
       },
       filename: (req: ExpressRequest<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
@@ -71,7 +68,6 @@ class FileServer extends EventEmitter {
 
       if (fs.existsSync(absPath)) {
         if (recursive) {
-          // Recursive file listing
           const walkDir = (currentPath: string, relativePath: string = ''): void => {
             const items: string[] = fs.readdirSync(currentPath);
 
@@ -100,7 +96,6 @@ class FileServer extends EventEmitter {
 
           walkDir(absPath, path.relative(rootDir, absPath));
         } else {
-          // Non-recursive (original implementation)
           const items: string[] = fs.readdirSync(absPath);
 
           items.forEach(item => {
@@ -140,7 +135,6 @@ class FileServer extends EventEmitter {
       const absPath: string = path.join(rootDir, req.body.path);
       const dirPath: string = path.dirname(absPath);
 
-      // Create directory if it doesn't exist
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
       }
@@ -149,7 +143,6 @@ class FileServer extends EventEmitter {
       res.json({ success: true, path: req.body.path });
       this.log(`File updated: ${absPath}`);
     });
-
 
     app.post('/api/files/upload', upload.single('file'), (req: Request, res: Response): void => {
       if (!req.file) {
@@ -233,6 +226,12 @@ class FileServer extends EventEmitter {
           resolve();
         });
 
+        // Track all open TCP connections!
+        this.server.on('connection', (conn: any) => {
+          this.connections.add(conn);
+          conn.on('close', () => this.connections.delete(conn));
+        });
+
         this.server.on('error', (err) => {
           this.isRunning = false;
           this.error('Failed to start file server:', err);
@@ -259,6 +258,11 @@ class FileServer extends EventEmitter {
           this.log('File server stopped');
           resolve();
         });
+        this.log(`Destroying ${this.connections.size} connections.`);
+        for (const conn of this.connections) {
+          conn.destroy();
+        }
+        this.connections.clear();
       } catch (error: any) {
         this.error('Failed to stop file server:', error);
         reject(error);
