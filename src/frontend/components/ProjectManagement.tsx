@@ -19,7 +19,6 @@ type ProjectState = {
     isRunning: boolean;
     port: number;
   };
-  error: string | null;
   templates: ProjectTemplate[];
   selectedTemplate: string | null;
   isCreatingProject: boolean;
@@ -29,10 +28,14 @@ type ProjectState = {
     severity: 'success' | 'error' | 'info' | 'warning';
   };
   logs: LogEntry[];
+  leftPanelWidth: number;
+  isDragging: boolean;
 };
 
 // Constants for localStorage
 const STORAGE_KEY_DIRECTORY = 'genesys_last_directory';
+const STORAGE_KEY_PANEL_WIDTH = 'genesys_panel_width';
+const DEFAULT_LEFT_PANEL_WIDTH = 300; // Default width in pixels
 
 export const ProjectManagement = () => {
   const [projectState, setProjectState] = useState<ProjectState>({
@@ -41,7 +44,6 @@ export const ProjectManagement = () => {
       isRunning: false,
       port: 4000,
     },
-    error: null,
     templates: [],
     selectedTemplate: null,
     isCreatingProject: false,
@@ -50,11 +52,69 @@ export const ProjectManagement = () => {
       message: '',
       severity: 'info'
     },
-    logs: []
+    logs: [],
+    leftPanelWidth: parseInt(localStorage.getItem(STORAGE_KEY_PANEL_WIDTH) ?? DEFAULT_LEFT_PANEL_WIDTH.toString(), 10),
+    isDragging: false
   });
 
   const logEndRef = useRef<HTMLDivElement>(null);
+  const resizeDividerRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom when logs update
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [projectState.logs]);
+
+  // Setup resize event handlers
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!projectState.isDragging) return;
+
+      // Get the parent element's left position
+      const parentRect = resizeDividerRef.current?.parentElement?.getBoundingClientRect();
+      if (!parentRect) return;
+
+      // Calculate the new width based on mouse position
+      const newWidth = Math.max(200, Math.min(e.clientX - parentRect.left, parentRect.width - 200));
+
+      setProjectState(prev => ({
+        ...prev,
+        leftPanelWidth: newWidth
+      }));
+    };
+
+    const handleMouseUp = () => {
+      if (!projectState.isDragging) return;
+
+      setProjectState(prev => ({
+        ...prev,
+        isDragging: false
+      }));
+
+      // Save the width to localStorage
+      localStorage.setItem(STORAGE_KEY_PANEL_WIDTH, projectState.leftPanelWidth.toString());
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [projectState.isDragging, projectState.leftPanelWidth]);
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setProjectState(prev => ({
+      ...prev,
+      isDragging: true
+    }));
+  };
+
+  // Setup electron logging
   useEffect(() => {
     const removeLogListener = window.electronAPI.logging.onLog((...args) => {
       addLog('info', '[Electron]', ...args);
@@ -74,13 +134,6 @@ export const ProjectManagement = () => {
       removeWarnListener();
     };
   }, []);
-
-  // Scroll to bottom when logs update
-  useEffect(() => {
-    if (logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [projectState.logs]);
 
   const addLog = (level: LogLevel = 'info', ...args: any[]) => {
     const message = args.map(arg => {
@@ -318,14 +371,11 @@ export const ProjectManagement = () => {
         </div>
       )}
 
-      {projectState.error && (
-        <div className="error-message">
-          {projectState.error}
-        </div>
-      )}
-
       <div className="project-layout">
-        <div className="project-controls">
+        <div
+          className="project-controls"
+          style={{ width: `${projectState.leftPanelWidth}px` }}
+        >
           <div className="controls">
             <div className="control-group">
               <LoadingButton
@@ -344,8 +394,8 @@ export const ProjectManagement = () => {
                 disabled={!projectState.selectedDirectory}
               >
                 {projectState.serverStatus.isRunning
-                  ? `Stop Server (Port: ${projectState.serverStatus.port})`
-                  : 'Start Server'}
+                  ? `Stop File Server (Port: ${projectState.serverStatus.port})`
+                  : 'Start File Server'}
               </LoadingButton>
             </div>
 
@@ -380,6 +430,13 @@ export const ProjectManagement = () => {
             </div>
           </div>
         </div>
+
+        <div
+          className="resize-divider"
+          ref={resizeDividerRef}
+          onMouseDown={handleResizeStart}
+          title="Drag to resize"
+        ></div>
 
         <div className="project-logs">
           {projectState.logs.map((log, index) => (

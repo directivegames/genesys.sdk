@@ -1,5 +1,4 @@
-
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 
 import * as ENGINE from 'genesys.js';
@@ -20,11 +19,24 @@ export const TEMPLATES: ProjectTemplate[] = [
 
 export async function newProject(projectPath: string, templateId: string): Promise<CreateProjectResult> {
   try {
+    if (fs.existsSync(projectPath)) {
+      // Check if directory is empty
+      const files = fs.readdirSync(projectPath);
+      if (files.length > 0) {
+        return {
+          success: false,
+          message: 'Project directory is not empty',
+          error: `The directory ${projectPath} already contains files. Please choose an empty directory.`
+        };
+      }
+    } else {
+      fs.mkdirSync(projectPath, { recursive: true });
+    }
     const templateName = 'GAME.' + templateId;
     const templateClass = ENGINE.ClassRegistry.getClass(templateName);
     const template: T.IGameTemplate = new templateClass();
-    await fs.writeFile(path.join(projectPath, DEFAULT_GAME_NAME), template.getGameCode());
-    await fs.writeFile(path.join(projectPath, DEFAULT_SCENE_NAME), JSON.stringify(template.getWorld().asExportedObject(), null, 2));
+    fs.writeFileSync(path.join(projectPath, DEFAULT_GAME_NAME), template.getGameCode());
+    fs.writeFileSync(path.join(projectPath, DEFAULT_SCENE_NAME), JSON.stringify(template.getWorld().asExportedObject(), null, 2));
     await template.additionalSetup();
 
     return {
