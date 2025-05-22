@@ -1,4 +1,7 @@
+import fs from 'fs';
+
 import { dialog, ipcMain, shell } from 'electron';
+import { readdir } from 'node:original-fs';
 
 import { fileServer } from './file-server.js';
 import { buildProject } from './tools/build-project.js';
@@ -39,6 +42,13 @@ ipcMain.handle('os.chooseDirectory', async (): Promise<string | null> => {
 
 ipcMain.handle('os.openPath', async (_, path: string): Promise<void> => {
   await shell.openPath(path);
+});
+
+ipcMain.handle('os.readDirectory', async (_, path: string): Promise<string[] | null> => {
+  if (!fs.existsSync(path)) {
+    return null;
+  }
+  return fs.readdirSync(path);
 });
 
 ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<ToolCallingResult> => {

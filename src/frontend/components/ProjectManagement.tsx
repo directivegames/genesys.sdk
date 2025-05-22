@@ -15,6 +15,7 @@ type LogEntry = {
 
 type ProjectState = {
   selectedDirectory: string | null;
+  directoryContents: string[] | null;
   serverStatus: {
     isRunning: boolean;
     port: number;
@@ -41,6 +42,7 @@ const DEFAULT_LEFT_PANEL_WIDTH = 300; // Default width in pixels
 export const ProjectManagement = () => {
   const [projectState, setProjectState] = useState<ProjectState>({
     selectedDirectory: localStorage.getItem(STORAGE_KEY_DIRECTORY),
+    directoryContents: null,
     serverStatus: {
       isRunning: false,
       port: 4000,
@@ -182,11 +184,34 @@ export const ProjectManagement = () => {
     addLog('info', 'Initializing Genesys SDK');
     fetchTemplates();
 
-    // If we have a saved directory, log it
+    // If we have a saved directory, log it and read its contents
     if (projectState.selectedDirectory) {
       addLog('info', `Loaded last used directory: ${projectState.selectedDirectory}`);
+      readSelectedDirectory(projectState.selectedDirectory);
     }
   }, []);
+
+  const readSelectedDirectory = async (directory: string) => {
+    try {
+      const contents = await window.electronAPI.os.readDirectory(directory);
+      setProjectState(prev => ({
+        ...prev,
+        directoryContents: contents,
+      }));
+
+      if (contents && contents.length > 0) {
+        addLog('info', `Directory contains ${contents.length} items`);
+      } else {
+        addLog('info', 'Directory is empty');
+      }
+    } catch (error) {
+      addLog('error', 'Failed to read directory contents', error);
+      setProjectState(prev => ({
+        ...prev,
+        directoryContents: null,
+      }));
+    }
+  };
 
   const handleChooseDirectory = async () => {
     try {
@@ -201,6 +226,9 @@ export const ProjectManagement = () => {
         }));
 
         addLog('success', `Selected and saved directory: ${directory}`);
+
+        // Read directory contents
+        await readSelectedDirectory(directory);
       } else {
         // User canceled directory selection
       }
@@ -274,6 +302,8 @@ export const ProjectManagement = () => {
         addLog('error', 'Error creating project', result.error);
       } else {
         await window.electronAPI.os.openPath(projectState.selectedDirectory);
+        // Read directory contents after creating project
+        await readSelectedDirectory(projectState.selectedDirectory);
       }
 
       setProjectState(prev => ({
@@ -320,6 +350,7 @@ export const ProjectManagement = () => {
     setProjectState(prev => ({
       ...prev,
       selectedDirectory: null,
+      directoryContents: null,
     }));
     addLog('info', 'Cleared saved directory');
   };
@@ -396,7 +427,7 @@ export const ProjectManagement = () => {
       {projectState.selectedDirectory ? (
         <div className="current-directory">
           <div className="directory-content">
-            <strong>Current Directory:</strong> {projectState.selectedDirectory}
+            <strong>Current Working Directory:</strong> {projectState.selectedDirectory}
           </div>
           <LoadingButton
             size="small"
@@ -405,7 +436,7 @@ export const ProjectManagement = () => {
             onClick={handleOpenDirectory}
             style={{ marginLeft: '10px' }}
           >
-            Open
+            Open in Explorer
           </LoadingButton>
           <LoadingButton
             size="small"
@@ -434,64 +465,74 @@ export const ProjectManagement = () => {
                 variant="contained"
                 onClick={ handleChooseDirectory }
               >
-                Open Directory
+                Change Working Directory
               </LoadingButton>
             </div>
 
-            <div className="control-group">
-              <LoadingButton
-                variant="contained"
-                onClick={handleToggleServer}
-                color={projectState.serverStatus.isRunning ? 'error' : 'primary'}
-                disabled={!projectState.selectedDirectory}
-              >
-                {projectState.serverStatus.isRunning
-                  ? `Stop File Server (Port: ${projectState.serverStatus.port})`
-                  : 'Start File Server'}
-              </LoadingButton>
-            </div>
+            {projectState.selectedDirectory && projectState.directoryContents !== null && (
+              <>
+                {projectState.directoryContents.length === 0 ? (
+                  // Directory is empty, show create project UI
+                  <div className="control-group">
+                    <div className="template-selection">
+                      <FormControl fullWidth>
+                        <InputLabel id="template-select-label">Template</InputLabel>
+                        <Select
+                          labelId="template-select-label"
+                          id="template-select"
+                          value={projectState.selectedTemplate ?? ''}
+                          label="Template"
+                          onChange={handleTemplateChange}
+                          disabled={projectState.isCreatingProject}
+                        >
+                          {projectState.templates.map(template => (
+                            <MenuItem key={template.id} value={template.id}>
+                              {template.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </div>
+                    <LoadingButton
+                      variant="contained"
+                      onClick={handleCreateProject}
+                      disabled={!projectState.selectedDirectory || !projectState.selectedTemplate || projectState.isCreatingProject}
+                      loading={projectState.isCreatingProject}
+                    >
+                      Create New Project
+                    </LoadingButton>
+                  </div>
+                ) : (
+                  // Directory is not empty, show build/server UI
+                  <>
+                    <div className="control-group">
+                      <LoadingButton
+                        variant="contained"
+                        onClick={handleToggleServer}
+                        color={projectState.serverStatus.isRunning ? 'error' : 'primary'}
+                        disabled={!projectState.selectedDirectory}
+                      >
+                        {projectState.serverStatus.isRunning
+                          ? `Stop File Server (Port: ${projectState.serverStatus.port})`
+                          : 'Start File Server'}
+                      </LoadingButton>
+                    </div>
 
-            <div className="control-group">
-              <LoadingButton
-                variant="contained"
-                onClick={handleBuildProject}
-                color="info"
-                disabled={!projectState.selectedDirectory || projectState.isBuildingProject}
-                loading={projectState.isBuildingProject}
-              >
-                Build Project
-              </LoadingButton>
-            </div>
-
-            <div className="control-group">
-              <div className="template-selection">
-                <FormControl fullWidth>
-                  <InputLabel id="template-select-label">Template</InputLabel>
-                  <Select
-                    labelId="template-select-label"
-                    id="template-select"
-                    value={projectState.selectedTemplate ?? ''}
-                    label="Template"
-                    onChange={handleTemplateChange}
-                    disabled={projectState.isCreatingProject}
-                  >
-                    {projectState.templates.map(template => (
-                      <MenuItem key={template.id} value={template.id}>
-                        {template.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </div>
-              <LoadingButton
-                variant="contained"
-                onClick={handleCreateProject}
-                disabled={!projectState.selectedDirectory || !projectState.selectedTemplate || projectState.isCreatingProject}
-                loading={projectState.isCreatingProject}
-              >
-                Create New Project
-              </LoadingButton>
-            </div>
+                    <div className="control-group">
+                      <LoadingButton
+                        variant="contained"
+                        onClick={handleBuildProject}
+                        color="info"
+                        disabled={!projectState.selectedDirectory || projectState.isBuildingProject}
+                        loading={projectState.isBuildingProject}
+                      >
+                        Build Project
+                      </LoadingButton>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
 
