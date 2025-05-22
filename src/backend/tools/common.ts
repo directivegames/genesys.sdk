@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -32,5 +33,29 @@ export function checkEngineVersion(engineVersion?: string) {
   const pkg = JSON.parse(fs.readFileSync(path.join(getProjectRoot(), 'node_modules/genesys.js/package.json'), 'utf8'));
   if (engineVersion && engineVersion !== pkg.version) {
     throw new Error(`Engine version ${pkg.version} does not match ${engineVersion}`);
+  }
+}
+
+export function runCommand(command: string, workingDir: string | null) {
+  const isMac = process.platform === 'darwin';
+  const originalDir = process.cwd();
+  try {
+    if (workingDir) {
+      process.chdir(workingDir);
+    }
+
+    if (isMac) {
+      const env = Object.assign({}, process.env, {
+        PATH: [
+          '/usr/local/bin',
+          process.env.PATH,
+        ].join(':')
+      });
+      execSync(command, { stdio: 'inherit', env });
+    } else {
+      execSync(command, { stdio: 'inherit' });
+    }
+  } finally {
+    process.chdir(originalDir);
   }
 }

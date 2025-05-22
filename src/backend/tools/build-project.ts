@@ -1,9 +1,9 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
 import { logger } from '../logging.js';
 
+import { runCommand } from './common.js';
 import {
   BUILT_PROJECT_FOLDER,
   DEFAULT_GAME_BUNDLE_NAME,
@@ -51,7 +51,7 @@ export async function buildProject(projectPath: string): Promise<ToolCallingResu
     const gameBundleFilePath = path.join(distFolder, DEFAULT_GAME_BUNDLE_NAME);
     const buildCommand = `npx esbuild ${gameFilePath} --bundle --platform=browser --minify --keep-names --outfile=${gameBundleFilePath} --external:genesys.js --external:three --format=cjs`;
     logger.log(`Building game bundle from ${gameFilePath}`);
-    execSync(buildCommand);
+    runCommand(buildCommand, projectPath);
 
     // inject the prefabs into the scene
     const sceneData = JSON.parse(fs.readFileSync(sceneFilePath, 'utf8'));

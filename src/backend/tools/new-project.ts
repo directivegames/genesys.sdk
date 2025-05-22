@@ -1,11 +1,12 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+
 
 import * as ENGINE from 'genesys.js';
 
 import { logger } from '../logging.js';
 
+import { runCommand } from './common.js';
 import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME, IgnoredFiles } from './const.js';
 import * as T from './project-templates/index.js';
 
@@ -109,26 +110,6 @@ function copyFolderSync(source: string, destination: string): void {
   }
 }
 
-/**
- * Run npm commands in the specified directory
- */
-function runNpmCommands(directory: string, commands: string[]): void {
-  const originalDir = process.cwd();
-  try {
-    // Change to project directory
-    process.chdir(directory);
-
-    // Run each command
-    for (const command of commands) {
-      console.log(`Running '${command}' in ${directory}...`);
-      execSync(command, { stdio: 'inherit' });
-    }
-  } finally {
-    // Return to original directory
-    process.chdir(originalDir);
-  }
-}
-
 export async function newProject(projectPath: string, templateId: string): Promise<ToolCallingResult> {
   logger.log(`Creating project at ${projectPath} using ${templateId} template`);
   try {
@@ -159,7 +140,8 @@ export async function newProject(projectPath: string, templateId: string): Promi
     fs.writeFileSync(path.join(projectPath, 'game.code-workspace'), projectFiles.gameCodeWorkspace);
 
     logger.log('Running npm install and npm run build...');
-    runNpmCommands(projectPath, ['npm install', 'npm run build']);
+    runCommand('npm install', projectPath);
+    runCommand('npm run build', projectPath);
 
     logger.log('Project created successfully');
 

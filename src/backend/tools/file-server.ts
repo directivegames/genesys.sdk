@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,6 +10,7 @@ import { WebSocketServer } from 'ws';
 import { logger } from '../logging.js';
 
 import { buildProject } from './build-project.js';
+import { runCommand } from './common.js';
 import { IgnoredFiles } from './const.js';
 
 import type { Request as ExpressRequest } from 'express';
@@ -188,7 +188,7 @@ class FileServer {
 
       logger.log(`Executing command: ${req.body.command}`);
       try {
-        execSync(req.body.command);
+        runCommand(req.body.command, null);
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
         return;
