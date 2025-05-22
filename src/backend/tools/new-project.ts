@@ -4,9 +4,9 @@ import path from 'path';
 
 import * as ENGINE from 'genesys.js';
 
-import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME, IgnoredFiles } from '../const.js';
 import { logger } from '../logging.js';
 
+import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME, IgnoredFiles } from './const.js';
 import * as T from './project-templates/index.js';
 
 import type { ProjectTemplate, ToolCallingResult } from '../../api.js';

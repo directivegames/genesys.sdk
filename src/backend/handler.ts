@@ -4,9 +4,9 @@ import { dialog, ipcMain, shell } from 'electron';
 
 import { IpcSerializableError } from '../IpcSerializableError.js';
 
-import { IgnoredFiles } from './const.js';
-import { fileServer } from './file-server.js';
 import { buildProject } from './tools/build-project.js';
+import { IgnoredFiles } from './tools/const.js';
+import { fileServer } from './tools/file-server.js';
 import { newProject, TEMPLATES } from './tools/new-project.js';
 
 import type { FileServerStatus, ProjectTemplate, ToolCallingResult } from '../api.js';

@@ -8,9 +8,10 @@ import express from 'express';
 import multer from 'multer';
 import { WebSocketServer } from 'ws';
 
+import { logger } from '../logging.js';
+
+import { buildProject } from './build-project.js';
 import { IgnoredFiles } from './const.js';
-import { logger } from './logging.js';
-import { buildProject } from './tools/build-project.js';
 
 import type { Request as ExpressRequest } from 'express';
 import type { Request, Response } from 'express';
