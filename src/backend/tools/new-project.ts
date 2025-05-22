@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-
 import * as ENGINE from 'genesys.js';
 
 import { logger } from '../logging.js';
 
-import { runCommand } from './common.js';
+import { getEngineVersion, runCommand } from './common.js';
 import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME, IgnoredFiles } from './const.js';
 import * as T from './project-templates/index.js';
 
@@ -27,60 +26,57 @@ const projectFiles = {
   dist
   node_modules
   `,
-  packageJson: `
-  {
-    "scripts": {
-      "build": "tsc"
+
+  packageJson: {
+    scripts: {
+      build: 'tsc'
     },
-    "keywords": [],
-    "type": "module",
-    "dependencies": {
-      "genesys.js": "^0.0.102"
+    keywords: [],
+    type: 'module',
+    dependencies: {
+      'genesys.js': `^${getEngineVersion()}`
     },
-    "devDependencies": {
-      "typescript": "^5.8.3",
-      "esbuild": "^0.25.4"
+    devDependencies: {
+      typescript: '^5.8.3',
+      esbuild: '^0.25.4'
     }
-  }
-  `,
-  tsconfigJson: `
-  {
-    "compilerOptions": {
-      "target": "ES2020",
-      "useDefineForClassFields": true,
-      "module": "ESNext",
-      "lib": ["ES2020", "DOM"],
-      "skipLibCheck": true,
-      "moduleResolution": "bundler",
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "jsx": "preserve",
-      "strict": true,
-      "noUnusedLocals": false,
-      "noUnusedParameters": false,
-      "noFallthroughCasesInSwitch": true,
-      "outDir": "./dist",
-      "rootDir": ".",
-      "declaration": true,
-      "inlineSourceMap": true,
-      "experimentalDecorators": true,
-      "noImplicitOverride": true,
-      "noEmit": true
+  },
+
+  tsconfigJson:{
+    compilerOptions: {
+      target: 'ES2020',
+      useDefineForClassFields: true,
+      module: 'ESNext',
+      lib: ['ES2020', 'DOM'],
+      skipLibCheck: true,
+      moduleResolution: 'bundler',
+      resolveJsonModule: true,
+      isolatedModules: true,
+      jsx: 'preserve',
+      strict: true,
+      noUnusedLocals: false,
+      noUnusedParameters: false,
+      noFallthroughCasesInSwitch: true,
+      outDir: './dist',
+      rootDir: '.',
+      declaration: true,
+      inlineSourceMap: true,
+      experimentalDecorators: true,
+      noImplicitOverride: true,
+      noEmit: true
     },
-    "include": ["."],
-    "exclude": [".engine", "dist"]
-  }
-  `,
-  gameCodeWorkspace: `
-  {
-    "folders": [
+    include: ['.', 'dist'],
+    exclude: ['.engine', 'dist']
+  },
+
+  gameCodeWorkspace:{
+    folders: [
       {
-        "path": "."
+        path: '.'
       }
     ],
-    "settings": {}
+    settings: {}
   }
-  `
 };
 
 /**
@@ -136,9 +132,9 @@ export async function newProject(projectPath: string, templateId: string): Promi
 
     logger.log('Creating project files...');
     fs.writeFileSync(path.join(projectPath, '.gitignore'), projectFiles.gitignore);
-    fs.writeFileSync(path.join(projectPath, 'package.json'), projectFiles.packageJson);
-    fs.writeFileSync(path.join(projectPath, 'tsconfig.json'), projectFiles.tsconfigJson);
-    fs.writeFileSync(path.join(projectPath, 'game.code-workspace'), projectFiles.gameCodeWorkspace);
+    fs.writeFileSync(path.join(projectPath, 'package.json'), JSON.stringify(projectFiles.packageJson, null, 2));
+    fs.writeFileSync(path.join(projectPath, 'tsconfig.json'), JSON.stringify(projectFiles.tsconfigJson, null, 2));
+    fs.writeFileSync(path.join(projectPath, 'game.code-workspace'), JSON.stringify(projectFiles.gameCodeWorkspace, null, 2));
 
     logger.log('Running npm install and npm run build...');
     runCommand('npm install', projectPath);

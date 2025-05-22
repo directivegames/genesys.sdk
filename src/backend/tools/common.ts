@@ -1,9 +1,11 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { JSDOM } from 'jsdom';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function mockBrowserEnvironment() {
   const dom = new JSDOM('<!DOCTYPE html><p>Hello world</p>');
@@ -58,4 +60,9 @@ export function runCommand(command: string, workingDir: string | null) {
   } finally {
     process.chdir(originalDir);
   }
+}
+
+export function getEngineVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(getProjectRoot(), 'node_modules/genesys.js/package.json'), 'utf8'));
+  return pkg.version;
 }
