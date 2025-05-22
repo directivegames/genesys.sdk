@@ -16,6 +16,10 @@
     "lint": "eslint . --fix --ext .ts,.tsx"
   },
   "build": {
+    "asar": true,
+    "asarUnpack": [
+      "assets/**"
+    ],
     "appId": "com.directivegames.genesys.sdk",
     "productName": "Genesys",
     "files": [
@@ -23,6 +27,13 @@
       {
         "from": "node_modules/three/examples/jsm",
         "to": "node_modules/three/examples/jsm",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "assets",
+        "to": "assets",
         "filter": [
           "**/*"
         ]

@@ -5,7 +5,7 @@ import * as ENGINE from 'genesys.js';
 
 import { logger } from '../logging.js';
 
-import { getEngineVersion, runCommand } from './common.js';
+import { getEngineVersion, getProjectRoot, runCommand } from './common.js';
 import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME, IgnoredFiles } from './const.js';
 import * as T from './project-templates/index.js';
 
@@ -22,14 +22,10 @@ export const TEMPLATES: ProjectTemplate[] = [
 ];
 
 const projectFiles = {
-  gitignore: `
-  dist
-  node_modules
-  `,
-
   packageJson: {
     scripts: {
-      build: 'tsc'
+      build: 'tsc',
+      postinstall: 'npx tsx ./src/post-install.ts',
     },
     keywords: [],
     type: 'module',
@@ -37,39 +33,13 @@ const projectFiles = {
       'genesys.js': `^${getEngineVersion()}`
     },
     devDependencies: {
+      '@types/node': '^22.15.21',
       typescript: '^5.8.3',
       esbuild: '^0.25.4'
     }
   },
 
-  tsconfigJson:{
-    compilerOptions: {
-      target: 'ES2020',
-      useDefineForClassFields: true,
-      module: 'ESNext',
-      lib: ['ES2020', 'DOM'],
-      skipLibCheck: true,
-      moduleResolution: 'bundler',
-      resolveJsonModule: true,
-      isolatedModules: true,
-      jsx: 'preserve',
-      strict: true,
-      noUnusedLocals: false,
-      noUnusedParameters: false,
-      noFallthroughCasesInSwitch: true,
-      outDir: './dist',
-      rootDir: '.',
-      declaration: true,
-      inlineSourceMap: true,
-      experimentalDecorators: true,
-      noImplicitOverride: true,
-      noEmit: true
-    },
-    include: ['.', 'dist'],
-    exclude: ['.engine', 'dist']
-  },
-
-  gameCodeWorkspace:{
+  codeWorkspace: {
     folders: [
       {
         path: '.'
@@ -78,34 +48,6 @@ const projectFiles = {
     settings: {}
   }
 };
-
-/**
- * Recursively copy files from source to destination
- */
-function copyFolderSync(source: string, destination: string): void {
-  // Create destination folder if it doesn't exist
-  if (!fs.existsSync(destination)) {
-    fs.mkdirSync(destination, { recursive: true });
-  }
-
-  // Read all files/folders from source
-  const files = fs.readdirSync(source);
-
-  // Copy each file/folder
-  for (const file of files) {
-    const sourcePath = path.join(source, file);
-    const destPath = path.join(destination, file);
-
-    // Check if it's a file or directory
-    if (fs.statSync(sourcePath).isDirectory()) {
-      // Recursively copy directory
-      copyFolderSync(sourcePath, destPath);
-    } else {
-      // Copy file
-      fs.copyFileSync(sourcePath, destPath);
-    }
-  }
-}
 
 export async function newProject(projectPath: string, templateId: string): Promise<ToolCallingResult> {
   logger.log(`Creating project at ${projectPath} using ${templateId} template`);
@@ -131,10 +73,14 @@ export async function newProject(projectPath: string, templateId: string): Promi
     await template.additionalSetup();
 
     logger.log('Creating project files...');
-    fs.writeFileSync(path.join(projectPath, '.gitignore'), projectFiles.gitignore);
     fs.writeFileSync(path.join(projectPath, 'package.json'), JSON.stringify(projectFiles.packageJson, null, 2));
-    fs.writeFileSync(path.join(projectPath, 'tsconfig.json'), JSON.stringify(projectFiles.tsconfigJson, null, 2));
-    fs.writeFileSync(path.join(projectPath, 'game.code-workspace'), JSON.stringify(projectFiles.gameCodeWorkspace, null, 2));
+    const projectName = path.basename(projectPath).replace(' ', '-');
+    fs.writeFileSync(path.join(projectPath, `${projectName}.code-workspace`), JSON.stringify(projectFiles.codeWorkspace, null, 2));
+
+    const isDev = process.env.NODE_ENV === 'development';
+    const projectSource = isDev ? path.join(getProjectRoot(), 'assets/new-project') : path.join(process.resourcesPath, 'app.asar.unpacked/assets/new-project');
+    logger.log('Copying other project files...');
+    fs.cpSync(projectSource, projectPath, { recursive: true });
 
     logger.log('Running npm install and npm run build...');
     runCommand('npm install', projectPath);
