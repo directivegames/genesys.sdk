@@ -1,0 +1,38 @@
+{
+  "name": "genesys.sdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev:vite": "vite",
+    "dev:electron": "tsc --watch",
+    "dev": "concurrently -k -n VITE,ELECTRON \"vite\" \"tsc --watch --preserveWatchOutput\" \"wait-on http://localhost:5173 && electron dist/main.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/directivegames/genesys.sdk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/directivegames/genesys.sdk/issues"
+  },
+  "homepage": "https://github.com/directivegames/genesys.sdk#readme",
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^36.2.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "wait-on": "^8.0.3"
+  }
+}
