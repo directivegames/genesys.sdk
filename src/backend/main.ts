@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { app, BrowserWindow, ipcMain } from 'electron';
+import './handler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +14,7 @@ const createWindow = async () => {
     height: 700,
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'), // compiled .js!
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
@@ -24,9 +25,5 @@ const createWindow = async () => {
     await win.loadFile(path.join(__dirname, '../index.html'));
   }
 };
-
-ipcMain.handle('ping', () => {
-  return 'pong from main process';
-});
 
 app.whenReady().then(createWindow);
