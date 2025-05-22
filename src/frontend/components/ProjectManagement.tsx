@@ -1,6 +1,9 @@
+import { LoadingButton } from '@mui/lab';
+import { Alert, FormControl, InputLabel, MenuItem, Select, Snackbar } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import type { ProjectTemplate } from '../../api.js';
+import type { SelectChangeEvent} from '@mui/material';
 
 type ProjectState = {
   selectedDirectory: string | null;
@@ -12,6 +15,11 @@ type ProjectState = {
   templates: ProjectTemplate[];
   selectedTemplate: string | null;
   isCreatingProject: boolean;
+  notification: {
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  };
 };
 
 export const ProjectManagement = () => {
@@ -25,6 +33,11 @@ export const ProjectManagement = () => {
     templates: [],
     selectedTemplate: null,
     isCreatingProject: false,
+    notification: {
+      open: false,
+      message: '',
+      severity: 'info'
+    }
   });
 
   // Check server status on component mount and fetch templates
@@ -126,7 +139,7 @@ export const ProjectManagement = () => {
     }
   };
 
-  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleTemplateChange = (e: SelectChangeEvent) => {
     setProjectState(prev => ({
       ...prev,
       selectedTemplate: e.target.value,
@@ -166,24 +179,52 @@ export const ProjectManagement = () => {
         ...prev,
         isCreatingProject: false,
         error: result.success ? null : result.error ?? 'Failed to create project',
+        notification: {
+          open: true,
+          message: result.success
+            ? `Project successfully created in ${projectState.selectedDirectory}`
+            : `Failed to create project: ${result.error ?? 'Unknown error'}`,
+          severity: result.success ? 'success' : 'error'
+        }
       }));
-
-      if (result.success) {
-        // Maybe refresh or update UI after successful creation
-      }
     } catch (error) {
       console.error('Error creating project:', error);
       setProjectState(prev => ({
         ...prev,
         isCreatingProject: false,
         error: 'Failed to create project',
+        notification: {
+          open: true,
+          message: 'Failed to create project due to an unexpected error',
+          severity: 'error'
+        }
       }));
     }
   };
 
+  const handleCloseNotification = () => {
+    setProjectState(prev => ({
+      ...prev,
+      notification: {
+        ...prev.notification,
+        open: false
+      }
+    }));
+  };
+
   return (
     <div className="project-management">
-      <h2>Project Management</h2>
+      <h2>Project Manager</h2>
+
+      {projectState.selectedDirectory ? (
+        <div className="current-directory">
+          <strong>Current Directory:</strong> {projectState.selectedDirectory}
+        </div>
+      ) : (
+        <div className="directory-warning">
+          <strong>Warning:</strong> No directory selected. Please select a directory to continue.
+        </div>
+      )}
 
       {projectState.error && (
         <div className="error-message">
@@ -193,54 +234,73 @@ export const ProjectManagement = () => {
 
       <div className="controls">
         <div className="control-group">
-          <button onClick={handleOpenDirectory}>
+          <LoadingButton
+            variant="contained"
+            onClick={handleOpenDirectory}
+          >
             Open Directory
-          </button>
-          <div className="selected-directory">
-            {projectState.selectedDirectory ? (
-              <span>{projectState.selectedDirectory}</span>
-            ) : (
-              <span className="placeholder">No directory selected</span>
-            )}
-          </div>
+          </LoadingButton>
         </div>
 
         <div className="control-group">
-          <button
+          <LoadingButton
+            variant="contained"
             onClick={handleToggleServer}
-            className={projectState.serverStatus.isRunning ? 'stop' : 'start'}
+            color={projectState.serverStatus.isRunning ? 'error' : 'primary'}
+            disabled={!projectState.selectedDirectory}
           >
             {projectState.serverStatus.isRunning
               ? `Stop Server (Port: ${projectState.serverStatus.port})`
               : 'Start Server'}
-          </button>
-          <div className="server-status">
-            Status: {projectState.serverStatus.isRunning ? 'Running' : 'Stopped'}
-          </div>
+          </LoadingButton>
         </div>
 
         <div className="control-group">
           <div className="template-selection">
-            <select
-              value={projectState.selectedTemplate ?? ''}
-              onChange={handleTemplateChange}
-              disabled={projectState.isCreatingProject}
-            >
-              {projectState.templates.map(template => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
+            <FormControl fullWidth>
+              <InputLabel id="template-select-label">Template</InputLabel>
+              <Select
+                labelId="template-select-label"
+                id="template-select"
+                value={projectState.selectedTemplate ?? ''}
+                label="Template"
+                onChange={handleTemplateChange}
+                disabled={projectState.isCreatingProject}
+              >
+                {projectState.templates.map(template => (
+                  <MenuItem key={template.id} value={template.id}>
+                    {template.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </div>
-          <button
+          <LoadingButton
+            variant="contained"
             onClick={handleCreateProject}
             disabled={!projectState.selectedDirectory || !projectState.selectedTemplate || projectState.isCreatingProject}
+            loading={projectState.isCreatingProject}
           >
-            {projectState.isCreatingProject ? 'Creating...' : 'Create New Project'}
-          </button>
+            Create New Project
+          </LoadingButton>
         </div>
       </div>
+
+      <Snackbar
+        open={projectState.notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={projectState.notification.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {projectState.notification.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

@@ -11,6 +11,28 @@
   color: #333;
 }
 
+.current-directory {
+  background-color: #e8f4ff;
+  border-left: 4px solid #4a90e2;
+  color: #333;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.directory-warning {
+  background-color: #fff9e6;
+  border-left: 4px solid #ffc107;
+  color: #856404;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .error-message {
   background-color: #fee;
   border-left: 4px solid #e55;
@@ -33,6 +55,10 @@
   gap: 8px;
 }
 
+.template-selection {
+  margin-bottom: 12px;
+}
+
 .selected-directory, .server-status {
   padding: 8px;
   background-color: #e8e8e8;
@@ -43,29 +69,6 @@
 .placeholder {
   color: #888;
   font-style: italic;
-}
-
-button {
-  padding: 10px 15px;
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background-color: #3a80d2;
-}
-
-button.stop {
-  background-color: #e25c5c;
-}
-
-button.stop:hover {
-  background-color: #d24c4c;
 }
 
 @media (min-width: 768px) {
