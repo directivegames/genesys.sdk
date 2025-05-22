@@ -8,6 +8,7 @@ import express from 'express';
 import multer from 'multer';
 import { WebSocketServer } from 'ws';
 
+import { IgnoredFiles } from './const.js';
 import { logger } from './logging.js';
 import { buildProject } from './tools/build-project.js';
 
@@ -72,7 +73,7 @@ class FileServer {
       if (fs.existsSync(absPath)) {
         if (recursive) {
           const walkDir = (currentPath: string, relativePath: string = ''): void => {
-            const items: string[] = fs.readdirSync(currentPath);
+            const items: string[] = fs.readdirSync(currentPath).filter(file => !IgnoredFiles.includes(file));
 
             items.forEach(item => {
               const itemPath: string = path.join(currentPath, item);
@@ -99,7 +100,7 @@ class FileServer {
 
           walkDir(absPath, path.relative(rootDir, absPath));
         } else {
-          const items: string[] = fs.readdirSync(absPath);
+          const items: string[] = fs.readdirSync(absPath).filter(file => !IgnoredFiles.includes(file));
 
           items.forEach(item => {
             const filePath: string = path.join(absPath, item);

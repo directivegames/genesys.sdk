@@ -2,15 +2,15 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-import { logger } from '../logging.js';
-
 import {
   BUILT_PROJECT_FOLDER,
   DEFAULT_GAME_BUNDLE_NAME,
   DEFAULT_GAME_NAME,
   DEFAULT_SCENE_NAME,
   PROJECT_PREFIX
-} from './const.js';
+} from '../const.js';
+import { logger } from '../logging.js';
+
 
 import type { ToolCallingResult } from '../../api.js';
 

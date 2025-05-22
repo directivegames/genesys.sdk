@@ -1,8 +1,8 @@
 import fs from 'fs';
 
 import { dialog, ipcMain, shell } from 'electron';
-import { readdir } from 'node:original-fs';
 
+import { IgnoredFiles } from './const.js';
 import { fileServer } from './file-server.js';
 import { buildProject } from './tools/build-project.js';
 import { newProject, TEMPLATES } from './tools/new-project.js';
@@ -48,7 +48,7 @@ ipcMain.handle('os.readDirectory', async (_, path: string): Promise<string[] | n
   if (!fs.existsSync(path)) {
     return null;
   }
-  return fs.readdirSync(path);
+  return fs.readdirSync(path).filter(file => !IgnoredFiles.includes(file));
 });
 
 ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId: string): Promise<ToolCallingResult> => {

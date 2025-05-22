@@ -4,9 +4,9 @@ import path from 'path';
 
 import * as ENGINE from 'genesys.js';
 
+import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME, IgnoredFiles } from '../const.js';
 import { logger } from '../logging.js';
 
-import { DEFAULT_GAME_NAME, DEFAULT_SCENE_NAME } from './const.js';
 import * as T from './project-templates/index.js';
 
 import type { ProjectTemplate, ToolCallingResult } from '../../api.js';
@@ -134,7 +134,7 @@ export async function newProject(projectPath: string, templateId: string): Promi
   try {
     if (fs.existsSync(projectPath)) {
       // Check if directory is empty
-      const files = fs.readdirSync(projectPath);
+      const files = fs.readdirSync(projectPath).filter(file => !IgnoredFiles.includes(file));
       if (files.length > 0) {
         return {
           success: false,
