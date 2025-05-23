@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import './handler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +16,29 @@ const createWindow = async () => {
       contextIsolation: true,
       preload: path.join(__dirname, '../preload/preload.js'),
     },
+  });
+
+  // Enable context menu
+  win.webContents.on('context-menu', (event, params) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: 'Copy',
+        role: 'copy',
+        enabled: params.selectionText.length > 0,
+      },
+      {
+        label: 'Select All',
+        role: 'selectAll',
+      },
+      { type: 'separator' },
+      {
+        label: 'Inspect Element',
+        click: () => {
+          win.webContents.inspectElement(params.x, params.y);
+        },
+      },
+    ]);
+    menu.popup();
   });
 
   if (isDev) {
