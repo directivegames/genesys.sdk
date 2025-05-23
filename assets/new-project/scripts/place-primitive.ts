@@ -5,9 +5,10 @@ import path from 'path';
 import * as ENGINE from 'genesys.js';
 import * as THREE from 'three';
 
-import { getProjectRoot } from './common.js';
+import { getProjectRoot, mockBrowserEnvironment } from './common.js';
 import { DEFAULT_SCENE_NAME } from './const.js';
 
+mockBrowserEnvironment();
 
 export const defaultWorldOptions = {
   rendererDomElement: document.createElement('div'),

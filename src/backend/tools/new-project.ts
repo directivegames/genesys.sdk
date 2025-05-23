@@ -34,8 +34,10 @@ const projectFiles = {
     },
     devDependencies: {
       '@types/node': '^22.15.21',
+      '@types/jsdom': '^21.1.7',
       '@modelcontextprotocol/sdk': '^1.11.2',
-      'zod': '^3.24.4',
+      zod: '^3.24.4',
+      jsdom: '^26.1.0',
       typescript: '^5.8.3',
       esbuild: '^0.25.4'
     }

@@ -1,6 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { JSDOM } from 'jsdom';
+
+export function mockBrowserEnvironment() {
+  const dom = new JSDOM('<!DOCTYPE html><p>Hello world</p>');
+  (global as any).window = dom.window;
+  (global as any).document = dom.window.document;
+  (global as any).HTMLElement = dom.window.HTMLElement;
+  if (navigator) {
+    navigator.getGamepads = () => [];
+  }
+}
 
 export function mockEsModule() {
   const __filename = fileURLToPath(import.meta.url);
