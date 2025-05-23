@@ -1,0 +1,142 @@
+---
+description: Must follow this rule when generating game code.
+globs: 
+alwaysApply: false
+---
+# Genesys AI Development Rules
+
+You are developing games using the Genesys engine — a custom TypeScript engine built on top of Three.js for 3D rendering.
+
+## Core Rules — Follow These Strictly
+
+- **Use Current File**  
+  If not specified, use the current file as initial context.
+
+- **Acknowledge Cursor Rules**  
+  Always tell the USER which cursor rules you're following.  
+
+- **Use Genesys APIs**  
+  Always use the built-in systems provided by the `genesys.js` engine. **Never reimplement core functionality from scratch.**
+
+- **Extend, Don't Rewrite**  
+  If an existing system needs modification, extend the base class. Do **not** duplicate or override entire systems.
+
+- **Use Code Snippets**  
+  Always use the *code-snippets* rule for shot examples of how to use the engine.
+
+- **Use Engine Examples**  
+  Reference the test projects in `node_modules/genesys.js/games/` for larger examples of correct usage.
+
+- **Clarify Before You Code**  
+  If the user's request is vague or incomplete, ask questions. **Never guess or assume functionality.**
+
+- **Stay in Scope**  
+  Only implement what the user has explicitly requested. Do **not** add features without approval.
+
+- **Build in Steps**  
+  Break large tasks into parts. **Confirm each step with the user** before proceeding to the next.
+
+- **Respect Engine Architecture**  
+  Follow the actor/component model. **Do not bypass** the scene graph or tick/update system.
+
+- **Always Use `BaseGameLoop`**  
+  Games must extend from `BaseGameLoop`. Do **not** create custom game loops from scratch.
+
+- **Track and Reference Assets Properly**
+  Keep a record of all models, textures, and audio used. Reference them explicitly when writing code.
+
+- **Avoid Monolithic Code**
+  Never put too much code in one file. Split relevant code and classes into their own files and import than for usage.
+
+- **Read Entire File**
+  When using the read_file tool, **always** read the entire file.
+
+- **Workflow**
+  When asked to generate game code, **always** follow this flow exactly:
+  1. Analyze the existing implementation to understand what is missing or requires changing.
+  2. Read the engine API documentation to understand what is provided out of the box.
+  3. Read the code snippets to better understand how to use the engine API.
+  4. If necessary, use engine example games for more complete usage examples.
+  5. Use all the information gathered in previous steps to guide code generation.
+
+# Folder Structure
+
+project/                        # Root folder
+├── node_modules/
+│   ├── genesys.js/             # Engine folder
+│   │   ├── definitions/        # Engine API documentation
+│   │   ├── src/                # Engine source code
+│   │   │   ├── actors/         # Actor classes
+│   │   │   ├── components/     # Component classes
+│   │   │   ├── game/           # Game loop and world classes
+│   │   │   ├── navigation/     # Navigation system
+│   │   │   ├── physics/        # Physics engine
+│   │   │   ├── render/         # Rendering system
+│   │   │   ├── systems/        # Standalone systems
+│   │   │   └── utils/          # Utility code
+│   │   └── games/              # Engine example games
+└── local-storage/
+    └── games/                  # User-created games
+
+# Engine Architecture Overview
+
+## World
+- Source: [World.ts](mdc:.engine/src/game/World.ts)
+- A container for `Actors`, representing an isolated simulation environment.
+- Actors within a `World` can only interact with other actors in the same world.
+
+## Actor
+- Source: [Actor.ts](mdc:.engine/src/actors/Actor.ts)
+- Represents a full entity within the game world.
+- Gains behavior and state from the components attached to it.
+- Does nothing on its own without components.
+
+## SceneComponent
+- Source: [SceneComponent.ts](mdc:.engine/src/components/SceneComponent.ts)
+- A visual and transformable component.
+- Extends `THREE.Object3D` and implements `IComponent`.
+- Supports scene graph hierarchy — attach to the root or other `SceneComponent` instances.
+- Each `Actor` has a single root `SceneComponent` to define its transform.
+
+## Component
+- Source: [Component.ts](mdc:.engine/src/components/Component.ts)
+- A logic-only unit of functionality.
+- Implements `IComponent` but does **not** extend `Object3D`.
+- Must be attached to an `Actor` to have any effect.
+
+## Pawn
+- Source: [Pawn.ts](mdc:.engine/src/actors/Pawn.ts)
+- A specialized `Actor` intended to be player-controllable.
+- Typically paired with a `PlayerController`.
+
+## PlayerController
+- Source: [PlayerController.ts](mdc:.engine/src/actors/PlayerController.ts)
+- An `Actor` that implements `IInputHandler`.
+- Maps input (keyboard, mouse, etc.) to actions on its assigned `Pawn`.
+
+## Input Handling
+- Source: [InputManager.ts](mdc:.engine/src/systems/InputManager.ts)
+- Each `World` contains one `InputManager`.
+- Listens for all input events and dispatches them to registered handlers.
+- Input events can only be consumed by **one handler** at a time.
+
+## Ticking
+- The `World` must be updated (or "ticked") regularly to maintain simulation state.
+- During each tick, the world updates all its actors, which in turn update their attached components.
+
+
+# Game Loop
+- Source: [GameLoop.ts](mdc:.engine/src/game/GameLoop.ts)
+- The main game flow is driven by a class called `BaseGameLoop`.
+- You must **always extend** `BaseGameLoop` when creating a new game.
+- `BaseGameLoop` handles:
+  - Engine setup and teardown
+  - World creation
+  - Tick updates
+  - Rendering pipeline
+- Never create a standalone or custom game loop.
+
+# API Reference
+
+For a full list of engine APIs, read: [__NoComments__.txt](mdc:.engine/definitions/__NoComments__.txt)
+It contains detailed class and method documentation generated from the engine source.

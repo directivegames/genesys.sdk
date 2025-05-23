@@ -28,11 +28,11 @@
     "types": ["node"]
   },
   "include": [
-    ".",
-    "dist"
+    "."
   ],
   "exclude": [
     ".engine",
-    "dist"
+    "dist",
+    ".dist"
   ]
 }

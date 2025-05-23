@@ -25,7 +25,7 @@ const projectFiles = {
   packageJson: {
     scripts: {
       build: 'tsc',
-      postinstall: 'npx tsx ./src/post-install.ts',
+      postinstall: 'npx tsx ./scripts/post-install.ts',
     },
     keywords: [],
     type: 'module',
@@ -34,6 +34,8 @@ const projectFiles = {
     },
     devDependencies: {
       '@types/node': '^22.15.21',
+      '@modelcontextprotocol/sdk': '^1.11.2',
+      'zod': '^3.24.4',
       typescript: '^5.8.3',
       esbuild: '^0.25.4'
     }

@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+      "genesys": {
+        "command": "node",
+        "args": [
+          "./dist/scripts/genesys-mcp.js"
+        ]
+      }
+    }
+}
