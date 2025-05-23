@@ -4,6 +4,7 @@ import path from 'path';
 import chokidar from 'chokidar';
 import cors from 'cors';
 import express from 'express';
+import { minimatch } from 'minimatch';
 import multer from 'multer';
 import { WebSocketServer } from 'ws';
 
@@ -29,6 +30,36 @@ interface FileItem {
 interface DirectoryListing {
     directories: FileItem[];
     files: FileItem[];
+}
+
+const hiddenFiles = [
+  ...IgnoredFiles,
+  '.cursor',
+  '.dist',
+  '.engine',
+  'dist',
+  'node_modules',
+  'scripts',
+  '.gitignore',
+  '.git',
+  'package.json',
+  'package-lock.json',
+  'tsconfig.json',
+  '*.code-workspace',
+];
+
+/**
+ * Check if a filename matches any of the hidden file patterns
+ */
+function isHiddenFile(filename: string): boolean {
+  return hiddenFiles.some(pattern => {
+    // If pattern contains wildcards, use minimatch for glob matching
+    if (pattern.includes('*') || pattern.includes('?') || pattern.includes('[')) {
+      return minimatch(filename, pattern);
+    }
+    // Otherwise, use exact string matching
+    return filename === pattern;
+  });
 }
 
 class FileServer {
@@ -74,7 +105,7 @@ class FileServer {
       if (fs.existsSync(absPath)) {
         if (recursive) {
           const walkDir = (currentPath: string, relativePath: string = ''): void => {
-            const items: string[] = fs.readdirSync(currentPath).filter(file => !IgnoredFiles.includes(file));
+            const items: string[] = fs.readdirSync(currentPath).filter(file => !isHiddenFile(file));
 
             items.forEach(item => {
               const itemPath: string = path.join(currentPath, item);
@@ -101,7 +132,7 @@ class FileServer {
 
           walkDir(absPath, path.relative(rootDir, absPath));
         } else {
-          const items: string[] = fs.readdirSync(absPath).filter(file => !IgnoredFiles.includes(file));
+          const items: string[] = fs.readdirSync(absPath).filter(file => !isHiddenFile(file));
 
           items.forEach(item => {
             const filePath: string = path.join(absPath, item);
