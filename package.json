@@ -20,6 +20,7 @@
     "publish": [
       {
         "provider": "github",
+        "releaseType": "release",
         "owner": "directivegames",
         "repo": "genesys.sdk",
         "private": true
