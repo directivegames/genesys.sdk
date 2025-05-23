@@ -24,7 +24,7 @@
     "inlineSourceMap": true,
     "experimentalDecorators": true,
     "noImplicitOverride": true,
-    "noEmit": true,
+    "noEmit": false,
     "types": ["node"]
   },
   "include": [
