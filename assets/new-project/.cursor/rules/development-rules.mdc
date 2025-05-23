@@ -75,8 +75,7 @@ project/                        # Root folder
 │   │   │   ├── systems/        # Standalone systems
 │   │   │   └── utils/          # Utility code
 │   │   └── games/              # Engine example games
-└── local-storage/
-    └── games/                  # User-created games
+└── game.ts                     # Main game code entry point
 
 # Engine Architecture Overview
 
