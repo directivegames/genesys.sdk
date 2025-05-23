@@ -4,6 +4,10 @@ import type { ElectronAPI, LogCallback } from './api.js';
 
 // see handler.ts
 const electronAPI: ElectronAPI = {
+  app: {
+    getInfo: () => ipcRenderer.invoke('app.getInfo'),
+  },
+
   fileServer: {
     start: (port: number, rootDir: string) => ipcRenderer.invoke('fileServer.start', port, rootDir),
     stop: () => ipcRenderer.invoke('fileServer.stop'),
@@ -22,8 +26,6 @@ const electronAPI: ElectronAPI = {
     deleteProject: (projectPath: string) => ipcRenderer.invoke('tools.deleteProject', projectPath),
     getProjectTemplates: () => ipcRenderer.invoke('tools.getProjectTemplates'),
     buildProject: (projectPath: string) => ipcRenderer.invoke('tools.buildProject', projectPath),
-    getEngineVersion: () => ipcRenderer.invoke('tools.getEngineVersion'),
-    getAppVersion: () => ipcRenderer.invoke('tools.getAppVersion'),
   },
 
   logging: {

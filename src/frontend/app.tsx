@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { ProjectManagement } from './components/ProjectManagement.js';
+
 import './components/ProjectManagement.css';
 import './styles.css';
+import type { AppInfo } from '../api.js';
 
 // Create a theme instance
 const theme = createTheme({
@@ -21,17 +23,12 @@ const theme = createTheme({
 });
 
 const App = () => {
-  const [engineVersion, setEngineVersion] = useState<string | null>(null);
-  const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [info, setInfo] = useState<AppInfo | null>(null);
 
   useEffect(() => {
     const fetchVersions = async () => {
-      const [engineVersion, appVersion] = await Promise.all([
-        window.electronAPI.tools.getEngineVersion(),
-        window.electronAPI.tools.getAppVersion(),
-      ]);
-      setEngineVersion(engineVersion);
-      setAppVersion(appVersion);
+      const info = await window.electronAPI.app.getInfo();
+      setInfo(info);
     };
     fetchVersions();
   }, []);
@@ -59,7 +56,7 @@ const App = () => {
         >
           Open Editor
         </a></h2>
-        <p><strong> App: {appVersion} Engine: {engineVersion}</strong></p>
+        <p><strong>App: {info?.appVersion}, Engine: {info?.engineVersion}{info?.isDev ? ', Development Build' : ''}</strong></p>
         <ProjectManagement />
       </div>
     </ThemeProvider>

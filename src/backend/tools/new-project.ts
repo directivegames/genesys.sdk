@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import isDev from 'electron-is-dev';
 import * as ENGINE from 'genesys.js';
 
 import { logger } from '../logging.js';
@@ -81,7 +82,6 @@ export async function newProject(projectPath: string, templateId: string): Promi
     const projectName = path.basename(projectPath).replace(' ', '-');
     fs.writeFileSync(path.join(projectPath, `${projectName}.code-workspace`), JSON.stringify(projectFiles.codeWorkspace, null, 2));
 
-    const isDev = process.env.NODE_ENV === 'development';
     const projectSource = isDev ? path.join(getProjectRoot(), 'assets/new-project') : path.join(process.resourcesPath, 'app.asar.unpacked/assets/new-project');
     logger.log('Copying other project files...');
     fs.cpSync(projectSource, projectPath, { recursive: true });

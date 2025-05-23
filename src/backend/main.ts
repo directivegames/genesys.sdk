@@ -2,15 +2,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { app, BrowserWindow, dialog, Menu } from 'electron';
+import isDev from 'electron-is-dev';
 import log from 'electron-log';
 import electronUpdater from 'electron-updater';
+
 const { autoUpdater } = electronUpdater;
+
 
 import './handler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const isDev = process.env.NODE_ENV === 'development';
 
 let mainWindow: BrowserWindow | null = null;
 

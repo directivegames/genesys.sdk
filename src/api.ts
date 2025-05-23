@@ -14,9 +14,19 @@ export type ProjectTemplate = {
     name: string;
 }
 
+export type AppInfo = {
+    isDev: boolean;
+    engineVersion: string;
+    appVersion: string;
+}
+
 export type LogCallback<T extends any[] = any[]> = (...data: T) => void;
 
 export type ElectronAPI = {
+    app: {
+        getInfo: () => Promise<AppInfo>;
+    }
+
     fileServer: {
         start: (port: number, rootDir: string) => Promise<Error | null>;
         stop: () => Promise<Error | null>;
@@ -35,8 +45,6 @@ export type ElectronAPI = {
         deleteProject: (projectPath: string) => Promise<ToolCallingResult>;
         getProjectTemplates: () => Promise<ProjectTemplate[]>;
         buildProject: (projectPath: string) => Promise<ToolCallingResult>;
-        getEngineVersion: () => Promise<string>;
-        getAppVersion: () => Promise<string>;
     }
 
     logging: {

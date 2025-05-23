@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { dialog, ipcMain, shell } from 'electron';
+import isDev from 'electron-is-dev';
 
 import { IpcSerializableError } from '../IpcSerializableError.js';
 
@@ -11,7 +12,7 @@ import { IgnoredFiles } from './tools/const.js';
 import { fileServer } from './tools/file-server.js';
 import { newProject, TEMPLATES } from './tools/new-project.js';
 
-import type { FileServerStatus, ProjectTemplate, ToolCallingResult } from '../api.js';
+import type { AppInfo, FileServerStatus, ProjectTemplate, ToolCallingResult } from '../api.js';
 
 ipcMain.handle('fileServer.start', async (_, port: number, rootDir: string): Promise<Error | null> => {
   try {
@@ -110,12 +111,10 @@ ipcMain.handle('tools.getProjectTemplates', async (): Promise<ProjectTemplate[]>
   return TEMPLATES;
 });
 
-ipcMain.handle('tools.getEngineVersion', async (): Promise<string> => {
-  return getEngineVersion();
+ipcMain.handle('app.getInfo', async (): Promise<AppInfo> => {
+  return {
+    isDev: isDev,
+    engineVersion: getEngineVersion(),
+    appVersion: getAppVersion(),
+  };
 });
-
-ipcMain.handle('tools.getAppVersion', async (): Promise<string> => {
-  return getAppVersion();
-});
-
-export {};
