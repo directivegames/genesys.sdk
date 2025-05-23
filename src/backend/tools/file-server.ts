@@ -62,6 +62,19 @@ function isHiddenFile(filename: string): boolean {
   });
 }
 
+/**
+ * Check if a file path should be ignored by the watcher
+ * This handles both files and directories
+ */
+function shouldIgnorePath(filePath: string, rootDir: string): boolean {
+  const relativePath = path.relative(rootDir, filePath);
+  const pathParts = relativePath.split(path.sep);
+
+  // Check if any part of the path matches hidden patterns
+  return pathParts.some(part => isHiddenFile(part)) ||
+         isHiddenFile(path.basename(filePath));
+}
+
 class FileServer {
   private server: ReturnType<express.Application['listen']> | null = null;
   private wsServer: WebSocketServer | null = null;
@@ -284,6 +297,7 @@ class FileServer {
       persistent: true,
       ignoreInitial: true,
       depth: 99,
+      ignored: (filePath: string) => shouldIgnorePath(filePath, rootDir),
     });
 
     watcher
