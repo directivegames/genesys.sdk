@@ -49,7 +49,7 @@ export async function buildProject(projectPath: string): Promise<ToolCallingResu
     fs.mkdirSync(distFolder, { recursive: true });
 
     const gameBundleFilePath = path.join(distFolder, DEFAULT_GAME_BUNDLE_NAME);
-    const buildCommand = `npx esbuild ${gameFilePath} --bundle --platform=browser --minify --keep-names --outfile=${gameBundleFilePath} --external:genesys.js --external:three --format=cjs`;
+    const buildCommand = `npx esbuild "${gameFilePath}" --bundle --platform=browser --minify --keep-names --outfile="${gameBundleFilePath}" --external:genesys.js --external:three --format=cjs`;
     logger.log(`Building game bundle from ${gameFilePath}`);
     runCommand(buildCommand, projectPath);
 
