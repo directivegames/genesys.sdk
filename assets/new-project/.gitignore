@@ -1,4 +1,5 @@
-
-  .dist
-  node_modules
-  .engine
+.dist
+node_modules
+.engine
+.DS_Store
+dist
