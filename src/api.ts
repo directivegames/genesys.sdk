@@ -32,6 +32,7 @@ export type ElectronAPI = {
 
     tools: {
         createProject: (projectPath: string, templateId: string) => Promise<ToolCallingResult>;
+        deleteProject: (projectPath: string) => Promise<ToolCallingResult>;
         getProjectTemplates: () => Promise<ProjectTemplate[]>;
         buildProject: (projectPath: string) => Promise<ToolCallingResult>;
         getEngineVersion: () => Promise<string>;

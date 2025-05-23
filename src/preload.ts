@@ -19,6 +19,7 @@ const electronAPI: ElectronAPI = {
 
   tools: {
     createProject: (projectPath: string, templateId: string) => ipcRenderer.invoke('tools.createProject', projectPath, templateId),
+    deleteProject: (projectPath: string) => ipcRenderer.invoke('tools.deleteProject', projectPath),
     getProjectTemplates: () => ipcRenderer.invoke('tools.getProjectTemplates'),
     buildProject: (projectPath: string) => ipcRenderer.invoke('tools.buildProject', projectPath),
     getEngineVersion: () => ipcRenderer.invoke('tools.getEngineVersion'),

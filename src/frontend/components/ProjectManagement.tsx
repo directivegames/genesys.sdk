@@ -1,5 +1,5 @@
 import { LoadingButton } from '@mui/lab';
-import { Alert, FormControl, InputLabel, MenuItem, Select, Snackbar } from '@mui/material';
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, MenuItem, Select, Snackbar } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 import { IpcSerializableError } from '../../IpcSerializableError.js';
@@ -26,6 +26,8 @@ type ProjectState = {
   selectedTemplate: string | null;
   isCreatingProject: boolean;
   isBuildingProject: boolean;
+  isDeletingProject: boolean;
+  deleteConfirmOpen: boolean;
   notification: {
     open: boolean;
     message: string;
@@ -53,6 +55,8 @@ export const ProjectManagement = () => {
     selectedTemplate: null,
     isCreatingProject: false,
     isBuildingProject: false,
+    isDeletingProject: false,
+    deleteConfirmOpen: false,
     notification: {
       open: false,
       message: '',
@@ -459,6 +463,79 @@ export const ProjectManagement = () => {
     }
   };
 
+  const handleDeleteProject = async () => {
+    try {
+      if (!projectState.selectedDirectory) {
+        throw new Error('No directory selected');
+      }
+
+      setProjectState(prev => ({
+        ...prev,
+        isDeletingProject: true,
+      }));
+
+      addLog('info', `Deleting project in ${projectState.selectedDirectory}...`);
+
+      const result = await window.electronAPI.tools.deleteProject(
+        projectState.selectedDirectory
+      );
+
+      if (result.success) {
+        addLog('success', result.message);
+
+        await readSelectedDirectory(projectState.selectedDirectory);
+
+        // Update state
+        setProjectState(prev => ({
+          ...prev,
+          isDeletingProject: false,
+          notification: {
+            open: true,
+            message: 'Project deleted successfully',
+            severity: 'success'
+          }
+        }));
+      } else {
+        addLog('error', result.message, result.error);
+
+        setProjectState(prev => ({
+          ...prev,
+          isDeletingProject: false,
+          notification: {
+            open: true,
+            message: `Failed to delete project: ${result.error ?? 'Unknown error'}`,
+            severity: 'error'
+          }
+        }));
+      }
+    } catch (error) {
+      addLog('error', 'Error deleting project', error);
+      setProjectState(prev => ({
+        ...prev,
+        isDeletingProject: false,
+        notification: {
+          open: true,
+          message: 'Failed to delete project due to an unexpected error',
+          severity: 'error'
+        }
+      }));
+    }
+  };
+
+  const handleOpenDeleteConfirm = () => {
+    setProjectState(prev => ({
+      ...prev,
+      deleteConfirmOpen: true
+    }));
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setProjectState(prev => ({
+      ...prev,
+      deleteConfirmOpen: false
+    }));
+  };
+
   return (
     <div className="project-management">
       {projectState.selectedDirectory ? (
@@ -579,6 +656,21 @@ export const ProjectManagement = () => {
                         Build Project
                       </LoadingButton>
                     </div>
+
+                    {/* Add delete project button at the bottom - only for non-empty projects */}
+                    <div className="control-group" style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #ddd' }}>
+                      <LoadingButton
+                        variant="contained"
+                        onClick={handleOpenDeleteConfirm}
+                        color="error"
+                        disabled={!projectState.selectedDirectory || projectState.isDeletingProject}
+                        loading={projectState.isDeletingProject}
+                        fullWidth
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Delete Project
+                      </LoadingButton>
+                    </div>
                   </>
                 )}
               </>
@@ -630,6 +722,42 @@ export const ProjectManagement = () => {
           {projectState.notification.message}
         </Alert>
       </Snackbar>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={projectState.deleteConfirmOpen}
+        onClose={handleCloseDeleteConfirm}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirm Project Deletion
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete the project at:
+            <br />
+            <strong>{projectState.selectedDirectory}</strong>
+            <br /><br />
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteConfirm} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleCloseDeleteConfirm();
+              handleDeleteProject();
+            }}
+            color="error"
+            autoFocus
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

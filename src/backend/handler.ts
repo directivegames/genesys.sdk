@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import { dialog, ipcMain, shell } from 'electron';
 
@@ -69,6 +70,32 @@ ipcMain.handle('tools.createProject', async (_, projectPath: string, templateId:
     res.error = IpcSerializableError.serialize(res.error);
   }
   return res;
+});
+
+ipcMain.handle('tools.deleteProject', async (_, projectPath: string): Promise<ToolCallingResult> => {
+  if (!fs.existsSync(projectPath)) {
+    return {
+      success: false,
+      message: 'Project not found',
+    };
+  }
+  try {
+    const entries = fs.readdirSync(projectPath, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(projectPath, entry.name);
+      fs.rmSync(fullPath, { recursive: true, force: true });
+    }
+    return {
+      success: true,
+      message: `Project ${projectPath} deleted`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Failed to delete project',
+      error: IpcSerializableError.serialize(error as Error),
+    };
+  }
 });
 
 ipcMain.handle('tools.buildProject', async (_, projectPath: string): Promise<ToolCallingResult> => {
