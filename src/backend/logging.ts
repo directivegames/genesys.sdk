@@ -37,24 +37,9 @@ export function configureLogging() {
   fs.mkdirSync(path.dirname(logPath), { recursive: true });
   log.transports.file.resolvePathFn = () => logPath;
   log.initialize();
-  const originalLog = console.log;
-  const originalError = console.error;
-  const originalWarn = console.warn;
-
-  console.log = (...args: any[]) => {
-    // originalLog(...args);
-    log.log(...args);
-  };
-
-  console.error = (...args: any[]) => {
-    // originalError(...args);
-    log.error(...args);
-  };
-
-  console.warn = (...args: any[]) => {
-    // originalWarn(...args);
-    log.warn(...args);
-  };
+  console.log = log.log;
+  console.error = log.error;
+  console.warn = log.warn;
 }
 
 

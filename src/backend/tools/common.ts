@@ -5,6 +5,9 @@ import { fileURLToPath } from 'url';
 
 import { JSDOM } from 'jsdom';
 
+import { logger } from '../logging.js';
+
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function mockBrowserEnvironment() {
@@ -45,6 +48,8 @@ export function runCommand(command: string, workingDir: string | null) {
     if (workingDir) {
       process.chdir(workingDir);
     }
+
+    logger.log(`Running command: ${command}`);
 
     if (isMac) {
       const env = Object.assign({}, process.env, {
