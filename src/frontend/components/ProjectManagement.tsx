@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { IpcSerializableError } from '../../IpcSerializableError.js';
 
-import type { ProjectTemplate } from '../../api.js';
+import type { AppInfo, ProjectTemplate } from '../../api.js';
 import type { SelectChangeEvent} from '@mui/material';
 
 type LogLevel = 'info' | 'success' | 'error' | 'warning';
@@ -36,6 +36,7 @@ type ProjectState = {
   logs: LogEntry[];
   leftPanelWidth: number;
   isDragging: boolean;
+  appInfo: AppInfo | null;
 };
 
 // Constants for localStorage
@@ -64,7 +65,8 @@ export const ProjectManagement = () => {
     },
     logs: [],
     leftPanelWidth: parseInt(localStorage.getItem(STORAGE_KEY_PANEL_WIDTH) ?? DEFAULT_LEFT_PANEL_WIDTH.toString(), 10),
-    isDragging: false
+    isDragging: false,
+    appInfo: null
   });
 
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -210,8 +212,21 @@ export const ProjectManagement = () => {
       }
     };
 
+    const fetchAppInfo = async () => {
+      try {
+        const appInfo = await window.electronAPI.app.getInfo();
+        setProjectState(prev => ({
+          ...prev,
+          appInfo,
+        }));
+      } catch (error) {
+        addLog('error', 'Error fetching app info', error);
+      }
+    };
+
     addLog('info', 'Initializing Genesys SDK');
     fetchTemplates();
+    fetchAppInfo();
 
     const loadLastUsedDirectory = async () => {
       if (projectState.selectedDirectory) {
@@ -413,6 +428,20 @@ export const ProjectManagement = () => {
       ...prev,
       logs: [],
     }));
+  };
+
+  const handleOpenAppLog = async () => {
+    try {
+      if (!projectState.appInfo?.logPath) {
+        addLog('error', 'App log path not available');
+        return;
+      }
+
+      await window.electronAPI.os.openPath(projectState.appInfo.logPath);
+      addLog('info', `Opened app log: ${projectState.appInfo.logPath}`);
+    } catch (error) {
+      addLog('error', 'Failed to open app log', error);
+    }
   };
 
   const handleBuildProject = async () => {
@@ -688,14 +717,25 @@ export const ProjectManagement = () => {
         <div className="project-logs">
           <div className="logs-header">
             <h3>Logs</h3>
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              color="secondary"
-              onClick={handleClearLogs}
-            >
-              Clear Logs
-            </LoadingButton>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                color="primary"
+                onClick={handleOpenAppLog}
+                disabled={!projectState.appInfo?.logPath}
+              >
+                Open App Log
+              </LoadingButton>
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                color="secondary"
+                onClick={handleClearLogs}
+              >
+                Clear Logs
+              </LoadingButton>
+            </div>
           </div>
           {projectState.logs.map((log, index) => (
             <div key={index} className={`log-entry log-entry-${log.level}`}>

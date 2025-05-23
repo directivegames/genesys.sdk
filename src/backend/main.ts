@@ -6,15 +6,22 @@ import isDev from 'electron-is-dev';
 import log from 'electron-log';
 import electronUpdater from 'electron-updater';
 
-const { autoUpdater } = electronUpdater;
-
-
+import { getAppInfo } from './handler.js';
+import { configureLogging } from './logging.js';
 import './handler.js';
+
+const { autoUpdater } = electronUpdater;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
+
+configureLogging();
+
+console.log('===============================================');
+console.log(`\n${JSON.stringify(getAppInfo(), null, 2)}`);
+console.log('===============================================');
 
 const createWindow = async () => {
   mainWindow = new BrowserWindow({

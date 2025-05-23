@@ -2,10 +2,12 @@ import fs from 'fs';
 import path from 'path';
 
 import { dialog, ipcMain, shell } from 'electron';
+import { app } from 'electron';
 import isDev from 'electron-is-dev';
 
 import { IpcSerializableError } from '../IpcSerializableError.js';
 
+import { getLogPath } from './logging.js';
 import { buildProject } from './tools/build-project.js';
 import { getAppVersion, getEngineVersion } from './tools/common.js';
 import { IgnoredFiles } from './tools/const.js';
@@ -112,9 +114,15 @@ ipcMain.handle('tools.getProjectTemplates', async (): Promise<ProjectTemplate[]>
 });
 
 ipcMain.handle('app.getInfo', async (): Promise<AppInfo> => {
+  return getAppInfo();
+});
+
+export function getAppInfo(): AppInfo {
   return {
     isDev: isDev,
     engineVersion: getEngineVersion(),
     appVersion: getAppVersion(),
+    appName: app.getName(),
+    logPath: getLogPath(),
   };
-});
+}

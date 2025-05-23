@@ -18,6 +18,8 @@ export type AppInfo = {
     isDev: boolean;
     engineVersion: string;
     appVersion: string;
+    appName: string;
+    logPath: string;
 }
 
 export type LogCallback<T extends any[] = any[]> = (...data: T) => void;
