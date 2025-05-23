@@ -35,7 +35,7 @@ const App = () => {
 
   const handleOpenEditor = (e: React.MouseEvent) => {
     e.preventDefault();
-    window.electronAPI.os.openPath('https://web--genesys-ai.us-central1.hosted.app/');
+    window.electronAPI.os.openUrl('https://web--genesys-ai.us-central1.hosted.app/');
   };
 
   return (

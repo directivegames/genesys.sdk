@@ -56,6 +56,10 @@ ipcMain.handle('os.openPath', async (_, path: string): Promise<void> => {
   await shell.openPath(path);
 });
 
+ipcMain.handle('os.openUrl', async (_, url: string): Promise<void> => {
+  await shell.openExternal(url);
+});
+
 ipcMain.handle('os.readDirectory', async (_, path: string): Promise<string[] | null> => {
   if (!fs.existsSync(path)) {
     return null;
