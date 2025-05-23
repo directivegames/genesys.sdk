@@ -8,6 +8,7 @@ import { minimatch } from 'minimatch';
 import multer from 'multer';
 import { WebSocketServer } from 'ws';
 
+import { getAppInfo } from '../handler.js';
 import { logger } from '../logging.js';
 
 import { buildProject } from './build-project.js';
@@ -107,6 +108,10 @@ class FileServer {
     });
 
     const upload = multer({ storage });
+
+    app.get('', (req: Request, res: Response): void => {
+      res.json(getAppInfo());
+    });
 
     app.get('/api/files', (req: Request, res: Response): void => {
       const absPath: string = path.join(rootDir, req.query.path as string || '');
