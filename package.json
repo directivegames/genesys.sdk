@@ -16,6 +16,15 @@
     "lint": "eslint . --fix --ext .ts,.tsx"
   },
   "build": {
+    "artifactName": "Genesys-Setup-${version}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "directivegames",
+        "repo": "genesys.sdk",
+        "private": true
+      }
+    ],
     "asar": true,
     "asarUnpack": [
       "assets/**"
@@ -60,6 +69,8 @@
     "chokidar": "^4.0.3",
     "core-util-is": "^1.0.3",
     "cors": "^2.8.5",
+    "electron-log": "^5.4.0",
+    "electron-updater": "^6.6.2",
     "express": "^5.1.0",
     "genesys.js": "^0.0.107",
     "jsdom": "^26.1.0",
