@@ -74,7 +74,7 @@ export const ProjectManagement = () => {
 
   // Scroll to bottom when logs update
   useEffect(() => {
-    if (logEndRef.current) {
+    if (logEndRef.current && projectState.logs.length > 20) {
       logEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [projectState.logs]);
