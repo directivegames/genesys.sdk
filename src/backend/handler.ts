@@ -5,7 +5,7 @@ import { dialog, ipcMain, shell } from 'electron';
 import { IpcSerializableError } from '../IpcSerializableError.js';
 
 import { buildProject } from './tools/build-project.js';
-import { getEngineVersion } from './tools/common.js';
+import { getAppVersion, getEngineVersion } from './tools/common.js';
 import { IgnoredFiles } from './tools/const.js';
 import { fileServer } from './tools/file-server.js';
 import { newProject, TEMPLATES } from './tools/new-project.js';
@@ -85,6 +85,10 @@ ipcMain.handle('tools.getProjectTemplates', async (): Promise<ProjectTemplate[]>
 
 ipcMain.handle('tools.getEngineVersion', async (): Promise<string> => {
   return getEngineVersion();
+});
+
+ipcMain.handle('tools.getAppVersion', async (): Promise<string> => {
+  return getAppVersion();
 });
 
 export {};

@@ -35,6 +35,7 @@ export type ElectronAPI = {
         getProjectTemplates: () => Promise<ProjectTemplate[]>;
         buildProject: (projectPath: string) => Promise<ToolCallingResult>;
         getEngineVersion: () => Promise<string>;
+        getAppVersion: () => Promise<string>;
     }
 
     logging: {

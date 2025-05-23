@@ -66,3 +66,8 @@ export function getEngineVersion() {
   const pkg = JSON.parse(fs.readFileSync(path.join(getProjectRoot(), 'node_modules/genesys.js/package.json'), 'utf8'));
   return pkg.version;
 }
+
+export function getAppVersion() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(getProjectRoot(), 'package.json'), 'utf8'));
+  return pkg.version;
+}

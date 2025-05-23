@@ -22,6 +22,7 @@ const electronAPI: ElectronAPI = {
     getProjectTemplates: () => ipcRenderer.invoke('tools.getProjectTemplates'),
     buildProject: (projectPath: string) => ipcRenderer.invoke('tools.buildProject', projectPath),
     getEngineVersion: () => ipcRenderer.invoke('tools.getEngineVersion'),
+    getAppVersion: () => ipcRenderer.invoke('tools.getAppVersion'),
   },
 
   logging: {

@@ -22,13 +22,18 @@ const theme = createTheme({
 
 const App = () => {
   const [engineVersion, setEngineVersion] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEngineVersion = async () => {
-      const version = await window.electronAPI.tools.getEngineVersion();
-      setEngineVersion(version);
+    const fetchVersions = async () => {
+      const [engineVersion, appVersion] = await Promise.all([
+        window.electronAPI.tools.getEngineVersion(),
+        window.electronAPI.tools.getAppVersion(),
+      ]);
+      setEngineVersion(engineVersion);
+      setAppVersion(appVersion);
     };
-    fetchEngineVersion();
+    fetchVersions();
   }, []);
 
   const handleOpenEditor = (e: React.MouseEvent) => {
@@ -40,7 +45,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <h1>Genesys ({engineVersion}) <a
+        <h2>Genesys <a
           href="#"
           onClick={handleOpenEditor}
           style={{
@@ -53,7 +58,8 @@ const App = () => {
           }}
         >
           Open Editor
-        </a></h1>
+        </a></h2>
+        <p><strong> App: {appVersion} Engine: {engineVersion}</strong></p>
         <ProjectManagement />
       </div>
     </ThemeProvider>
