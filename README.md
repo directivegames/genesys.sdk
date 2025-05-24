@@ -7,12 +7,17 @@
 - Open the folder in this app, create a new project based on the template you select, then run the file server.
 - Launch the web editor and cursor to develop.
 
+## Mac User
+Currently there's no pre-built installer for macOS as it requires some effort to setup code-signing.
+
+Mac users will need to build and install the installer locally for now, See the **Run Locally** section below for instructions.
+
 # Developer
 
 ## Run Locally
 - `npm install`
 - `npm run dev` to run the dev vesion
-- `npm run dist` to build the app locally, then find installer in the `dist` folder
+- `npm run dist` to build the app locally. Installer will be generated in the `dist` folder that you can use to install the app directly on your machine.
 
 ## New Project Template
 - The logic to setup a new project is in [new-project.ts](src/backend/tools//new-project.ts), it contains a few steps:  
